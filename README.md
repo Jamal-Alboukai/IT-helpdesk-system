@@ -64,7 +64,7 @@ The system uses a relational PostgreSQL database with 10 tables:
 
 `User` · `Role` · `Ticket` · `TicketComment` · `TicketAttachment` · `Notification` · `ActivityLog` · `Category` · `Priority` · `Status`
 
-📎 See full ERD diagram in [`/docs/ERD.png`](./docs/ERD.png)
+📎 See full ERD diagram in [`/docs/IT help desk.png`](./docs/IT help desk.png)
 
 ---
 
