@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebApplication1server.Models;
+using WebApplication1server.Helpers;
 
 namespace WebApplication1server.Data
 {
@@ -35,6 +36,34 @@ namespace WebApplication1server.Data
                       .WithMany()
                       .HasForeignKey(e => e.CreatedById);
             });
+            // Seed roles
+                        modelBuilder.Entity<Role>().HasData(
+                new Role
+                {
+                    Id = RoleConstants.AdminId,
+                    Name = RoleConstants.Admin,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Role
+                {
+                    Id = RoleConstants.ITSupportAgentId,
+                    Name = RoleConstants.ITSupportAgent,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Role
+                {
+                    Id = RoleConstants.EmployeeId,
+                    Name = RoleConstants.Employee,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Role
+                {
+                    Id = RoleConstants.ManagerId,
+                    Name = RoleConstants.Manager,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
         }
     }
 }
