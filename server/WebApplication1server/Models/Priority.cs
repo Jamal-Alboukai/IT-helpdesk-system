@@ -1,0 +1,15 @@
+using System.Net.Sockets;
+
+namespace WebApplication1server.Models
+{
+    public class Priority
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        // Navigation properties
+        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+    }
+}

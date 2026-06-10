@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebApplication1server.Data;
@@ -11,9 +12,11 @@ using WebApplication1server.Data;
 namespace WebApplication1server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609231820_AddTicketModule")]
+    partial class AddTicketModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -274,12 +277,6 @@ namespace WebApplication1server.Migrations
 
                     b.Property<DateTime?>("DueAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EscalationNote")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("EscalationRequested")
-                        .HasColumnType("boolean");
 
                     b.Property<Guid>("LastUpdatedById")
                         .HasColumnType("uuid");
