@@ -65,9 +65,8 @@ namespace WebApplication1server.Services
             ClaimsPrincipal userClaims,
             ChangePasswordDTO request)
         {
-            // Get user ID from JWT token claims
-            var userId = userClaims.FindFirst(
-                ClaimTypes.NameIdentifier)?.Value;
+            // Get user ID from token — using short claim name
+            var userId = userClaims.FindFirst("nameid")?.Value;
 
             if (userId == null)
                 return new AuthResult
