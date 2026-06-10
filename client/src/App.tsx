@@ -3,7 +3,9 @@ import { AuthProvider } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import ChangePasswordPage from './pages/auth/ChangePasswordPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
-
+import TicketListPage from './pages/tickets/TicketListPage';
+import CreateTicketPage from './pages/tickets/CreateTicketPage';
+import TicketDetailPage from './pages/tickets/TicketDetailPage';
 function App() {
   return (
     <AuthProvider>
@@ -25,9 +27,19 @@ function App() {
 
           <Route path="/tickets" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">Tickets</h1>
-              </div>
+            <TicketListPage />
+          </ProtectedRoute>
+          } />
+            // Add this route
+            <Route path="/tickets/new" element={
+              <ProtectedRoute>
+                <CreateTicketPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/tickets/:id" element={
+            <ProtectedRoute>
+              <TicketDetailPage />
             </ProtectedRoute>
           } />
 
