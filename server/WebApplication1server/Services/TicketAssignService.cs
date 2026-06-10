@@ -16,11 +16,16 @@ namespace WebApplication1server.Services
     {
         private readonly AppDbContext _context;
         private readonly ITicketQueryHelper _queryHelper;
+        private readonly IActivityLogService _activityLog;
 
-        public TicketAssignService(AppDbContext context, ITicketQueryHelper queryHelper)
+        public TicketAssignService(
+            AppDbContext context,
+            ITicketQueryHelper queryHelper,
+            IActivityLogService activityLog)
         {
             _context = context;
             _queryHelper = queryHelper;
+            _activityLog = activityLog;
         }
 
         // ─── ASSIGN TICKET — Admin only ───────────────────────
@@ -44,6 +49,10 @@ namespace WebApplication1server.Services
             if (assignedUser == null) return null;
             if (assignedUser.Role.Name != RoleConstants.ITSupportAgent) return null;
 
+            var oldAssignee = ticket.AssignedTo != null
+                ? $"{ticket.AssignedTo.FirstName} {ticket.AssignedTo.LastName}"
+                : "Unassigned";
+
             ticket.AssignedToId = request.AssignedToId;
             ticket.StatusId = SeedConstants.InProgressStatusId;
             ticket.EscalationRequested = false;
@@ -52,6 +61,15 @@ namespace WebApplication1server.Services
             ticket.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Log assignment
+            await _activityLog.LogAsync(
+                userId: userId,
+                action: "Ticket Assigned",
+                ticketId: ticket.Id,
+                oldValue: oldAssignee,
+                newValue: $"{assignedUser.FirstName} {assignedUser.LastName}"
+            );
 
             var updated = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
@@ -80,6 +98,14 @@ namespace WebApplication1server.Services
             ticket.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Log escalation request
+            await _activityLog.LogAsync(
+                userId: userId,
+                action: "Escalation Requested",
+                ticketId: ticket.Id,
+                newValue: request.EscalationNote
+            );
 
             var updated = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
