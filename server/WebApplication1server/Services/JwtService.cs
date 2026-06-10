@@ -28,17 +28,20 @@ namespace WebApplication1server.Services
             var audience = jwtSettings["Audience"]!;
             var expiryInDays = int.Parse(jwtSettings["ExpiryInDays"]!);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(
+                key, SecurityAlgorithms.HmacSha256);
 
-            // Claims embedded in the token
+            // Use short string claim names — not ClaimTypes URLs
+            // This ensures frontend can decode them correctly
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.GivenName, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName),
-                new Claim(ClaimTypes.Role, roleName),
+                new Claim("nameid", user.Id.ToString()),
+                new Claim("email", user.Email),
+                new Claim("given_name", user.FirstName),
+                new Claim("family_name", user.LastName),
+                new Claim("role", roleName),
                 new Claim("ForcePasswordChange",
                     user.ForcePasswordChange.ToString())
             };

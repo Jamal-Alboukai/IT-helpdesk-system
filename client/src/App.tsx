@@ -3,6 +3,12 @@ import { AuthProvider } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import ChangePasswordPage from './pages/auth/ChangePasswordPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import TicketListPage from './pages/tickets/TicketListPage';
+import CreateTicketPage from './pages/tickets/CreateTicketPage';
+import TicketDetailPage from './pages/tickets/TicketDetailPage';
+import EditTicketPage from './pages/tickets/EditTicketPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import MainLayout from './layouts/MainLayout';
 
 function App() {
   return (
@@ -14,44 +20,79 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
 
-          {/* Protected routes — backend enforces role access */}
+          {/* Protected routes with sidebar layout */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-              </div>
+              <MainLayout>
+                <DashboardPage />
+              </MainLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/tickets" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">Tickets</h1>
-              </div>
+              <MainLayout>
+                <TicketListPage />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/tickets/new" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <CreateTicketPage />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/tickets/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <TicketDetailPage />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/tickets/:id/edit" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <EditTicketPage />
+              </MainLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/reports" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">Reports</h1>
-              </div>
+              <MainLayout>
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold text-white">Reports</h1>
+                  <p className="text-gray-400 mt-2">Coming in Week 6.</p>
+                </div>
+              </MainLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/users" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">User Management</h1>
-              </div>
+              <MainLayout>
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold text-white">
+                    User Management
+                  </h1>
+                  <p className="text-gray-400 mt-2">Coming in Week 4.</p>
+                </div>
+              </MainLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/settings" element={
             <ProtectedRoute>
-              <div className="flex items-center justify-center h-screen bg-gray-900">
-                <h1 className="text-3xl font-bold text-white">Settings</h1>
-              </div>
+              <MainLayout>
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold text-white">Settings</h1>
+                  <p className="text-gray-400 mt-2">Coming in Week 7.</p>
+                </div>
+              </MainLayout>
             </ProtectedRoute>
           } />
 
