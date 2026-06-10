@@ -25,11 +25,16 @@ namespace WebApplication1server.Services
     {
         private readonly AppDbContext _context;
         private readonly ITicketQueryHelper _queryHelper;
+        private readonly IActivityLogService _activityLog;
 
-        public TicketService(AppDbContext context, ITicketQueryHelper queryHelper)
+        public TicketService(
+            AppDbContext context,
+            ITicketQueryHelper queryHelper,
+            IActivityLogService activityLog)
         {
             _context = context;
             _queryHelper = queryHelper;
+            _activityLog = activityLog;
         }
 
         // ─── GET ALL TICKETS ──────────────────────────────────
@@ -40,44 +45,31 @@ namespace WebApplication1server.Services
             var query = _queryHelper.BaseTicketQuery();
 
             // Role-based filtering
-            // Employee sees own tickets only
             if (role == RoleConstants.Employee)
                 query = query.Where(t => t.CreatedById == userId);
-
-            // ITSupportAgent sees assigned tickets only
             else if (role == RoleConstants.ITSupportAgent)
                 query = query.Where(t => t.AssignedToId == userId);
 
-            // Manager and Admin see all tickets — no filter
-
-            // Search filter
+            // Search
             if (!string.IsNullOrEmpty(filter.Search))
                 query = query.Where(t =>
                     t.Title.Contains(filter.Search) ||
                     t.ReferenceNumber.Contains(filter.Search) ||
                     t.Description.Contains(filter.Search));
 
-            // Category filter
+            // Filters
             if (filter.CategoryId.HasValue)
                 query = query.Where(t => t.CategoryId == filter.CategoryId);
-
-            // Priority filter
             if (filter.PriorityId.HasValue)
                 query = query.Where(t => t.PriorityId == filter.PriorityId);
-
-            // Status filter
             if (filter.StatusId.HasValue)
                 query = query.Where(t => t.StatusId == filter.StatusId);
-
-            // Escalation filter
             if (filter.EscalationRequested.HasValue)
                 query = query.Where(t =>
                     t.EscalationRequested == filter.EscalationRequested);
 
-            // Count total before pagination
             var totalCount = await query.CountAsync();
 
-            // Pagination — newest first
             var tickets = await query
                 .OrderByDescending(t => t.CreatedAt)
                 .Skip((filter.Page - 1) * filter.PageSize)
@@ -120,11 +112,8 @@ namespace WebApplication1server.Services
 
             if (ticket == null) return null;
 
-            // Employee can only see own tickets
             if (role == RoleConstants.Employee && ticket.CreatedById != userId)
                 return null;
-
-            // Agent can only see assigned tickets
             if (role == RoleConstants.ITSupportAgent && ticket.AssignedToId != userId)
                 return null;
 
@@ -145,7 +134,6 @@ namespace WebApplication1server.Services
                 Description = request.Description,
                 CategoryId = request.CategoryId,
                 PriorityId = request.PriorityId,
-                // All new tickets always start as Open
                 StatusId = SeedConstants.OpenStatusId,
                 CreatedById = userId,
                 LastUpdatedById = userId,
@@ -158,7 +146,14 @@ namespace WebApplication1server.Services
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
 
-            // Reload with all includes for response
+            // Log ticket creation
+            await _activityLog.LogAsync(
+                userId: userId,
+                action: "Ticket Created",
+                ticketId: ticket.Id,
+                newValue: ticket.ReferenceNumber
+            );
+
             var created = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
 
@@ -179,71 +174,118 @@ namespace WebApplication1server.Services
             // ── Employee ──────────────────────────────────────
             if (role == RoleConstants.Employee)
             {
-                // Own tickets only
                 if (ticket.CreatedById != userId) return null;
-
-                // Only if status is Open
                 if (ticket.StatusId != SeedConstants.OpenStatusId) return null;
 
-                // Can only update title, description, due date
-                if (request.Title != null) ticket.Title = request.Title;
-                if (request.Description != null) ticket.Description = request.Description;
+                if (request.Title != null)
+                {
+                    await _activityLog.LogAsync(userId, "Title Updated",
+                        ticket.Id, ticket.Title, request.Title);
+                    ticket.Title = request.Title;
+                }
+                if (request.Description != null)
+                {
+                    await _activityLog.LogAsync(userId, "Description Updated",
+                        ticket.Id, ticket.Description, request.Description);
+                    ticket.Description = request.Description;
+                }
                 if (request.DueAt != null) ticket.DueAt = request.DueAt;
             }
 
             // ── ITSupportAgent ────────────────────────────────
             else if (role == RoleConstants.ITSupportAgent)
             {
-                // Assigned tickets only
                 if (ticket.AssignedToId != userId) return null;
 
-                // Can update status
                 if (request.StatusId != null)
                 {
+                    // Get old and new status names for log
+                    var oldStatus = ticket.Status.Name;
                     ticket.StatusId = request.StatusId.Value;
 
-                    // Auto set resolved info
+                    // Reload status name for log
+                    var newStatus = await _context.Statuses
+                        .Where(s => s.Id == request.StatusId.Value)
+                        .Select(s => s.Name)
+                        .FirstOrDefaultAsync();
+
+                    await _activityLog.LogAsync(userId, "Status Changed",
+                        ticket.Id, oldStatus, newStatus);
+
                     if (request.StatusId == SeedConstants.ResolvedStatusId)
                     {
                         ticket.ResolvedById = userId;
                         ticket.ResolvedAt = DateTime.UtcNow;
                     }
                 }
-
-                // Can update category and priority
                 if (request.CategoryId != null)
+                {
+                    await _activityLog.LogAsync(userId, "Category Updated",
+                        ticket.Id, ticket.Category.Name, request.CategoryId.ToString());
                     ticket.CategoryId = request.CategoryId.Value;
+                }
                 if (request.PriorityId != null)
+                {
+                    await _activityLog.LogAsync(userId, "Priority Updated",
+                        ticket.Id, ticket.Priority.Name, request.PriorityId.ToString());
                     ticket.PriorityId = request.PriorityId.Value;
-
-                // Can request escalation
+                }
                 if (request.EscalationRequested == true)
                 {
                     ticket.EscalationRequested = true;
                     ticket.EscalationNote = request.EscalationNote;
+                    await _activityLog.LogAsync(userId, "Escalation Requested",
+                        ticket.Id, null, request.EscalationNote);
                 }
             }
 
             // ── Admin ─────────────────────────────────────────
             else if (role == RoleConstants.Admin)
             {
-                // Can update everything
-                if (request.Title != null) ticket.Title = request.Title;
-                if (request.Description != null) ticket.Description = request.Description;
-                if (request.CategoryId != null) ticket.CategoryId = request.CategoryId.Value;
-                if (request.PriorityId != null) ticket.PriorityId = request.PriorityId.Value;
+                if (request.Title != null)
+                {
+                    await _activityLog.LogAsync(userId, "Title Updated",
+                        ticket.Id, ticket.Title, request.Title);
+                    ticket.Title = request.Title;
+                }
+                if (request.Description != null)
+                {
+                    await _activityLog.LogAsync(userId, "Description Updated",
+                        ticket.Id, ticket.Description, request.Description);
+                    ticket.Description = request.Description;
+                }
+                if (request.CategoryId != null)
+                {
+                    await _activityLog.LogAsync(userId, "Category Updated",
+                        ticket.Id, ticket.Category.Name, request.CategoryId.ToString());
+                    ticket.CategoryId = request.CategoryId.Value;
+                }
+                if (request.PriorityId != null)
+                {
+                    await _activityLog.LogAsync(userId, "Priority Updated",
+                        ticket.Id, ticket.Priority.Name, request.PriorityId.ToString());
+                    ticket.PriorityId = request.PriorityId.Value;
+                }
                 if (request.DueAt != null) ticket.DueAt = request.DueAt;
 
                 if (request.StatusId != null)
                 {
+                    var oldStatus = ticket.Status.Name;
                     ticket.StatusId = request.StatusId.Value;
+
+                    var newStatus = await _context.Statuses
+                        .Where(s => s.Id == request.StatusId.Value)
+                        .Select(s => s.Name)
+                        .FirstOrDefaultAsync();
+
+                    await _activityLog.LogAsync(userId, "Status Changed",
+                        ticket.Id, oldStatus, newStatus);
 
                     if (request.StatusId == SeedConstants.ResolvedStatusId)
                     {
                         ticket.ResolvedById = userId;
                         ticket.ResolvedAt = DateTime.UtcNow;
                     }
-
                     if (request.StatusId == SeedConstants.ClosedStatusId)
                     {
                         ticket.ClosedById = userId;
@@ -251,9 +293,14 @@ namespace WebApplication1server.Services
                     }
                 }
 
-                // Assign ticket — resets escalation
                 if (request.AssignedToId != null)
                 {
+                    var assignedUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == request.AssignedToId);
+                    await _activityLog.LogAsync(userId, "Ticket Assigned",
+                        ticket.Id, ticket.AssignedTo?.FirstName,
+                        $"{assignedUser?.FirstName} {assignedUser?.LastName}");
+
                     ticket.AssignedToId = request.AssignedToId;
                     ticket.EscalationRequested = false;
                     ticket.EscalationNote = null;
@@ -267,10 +314,8 @@ namespace WebApplication1server.Services
                 return null;
             }
 
-            // Always update these
             ticket.LastUpdatedById = userId;
             ticket.UpdatedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
 
             var updated = await _queryHelper.BaseTicketQuery()
@@ -280,7 +325,6 @@ namespace WebApplication1server.Services
         }
 
         // ─── DELETE TICKET ────────────────────────────────────
-        // No hard deletes — sets status to Closed
         public async Task<bool> DeleteTicketAsync(
             Guid id, ClaimsPrincipal userClaims)
         {
@@ -291,21 +335,16 @@ namespace WebApplication1server.Services
 
             if (ticket == null) return false;
 
-            // Employee — own + Open tickets only
             if (role == RoleConstants.Employee)
             {
                 if (ticket.CreatedById != userId) return false;
                 if (ticket.StatusId != SeedConstants.OpenStatusId) return false;
             }
-
-            // Agent and Manager — cannot delete
             else if (role == RoleConstants.ITSupportAgent ||
                      role == RoleConstants.Manager)
             {
                 return false;
             }
-
-            // Admin — can close any ticket
 
             // Soft delete — set to Closed
             ticket.StatusId = SeedConstants.ClosedStatusId;
@@ -315,6 +354,14 @@ namespace WebApplication1server.Services
             ticket.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Log ticket closure
+            await _activityLog.LogAsync(
+                userId: userId,
+                action: "Ticket Closed",
+                ticketId: ticket.Id
+            );
+
             return true;
         }
     }

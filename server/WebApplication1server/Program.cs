@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITicketQueryHelper, TicketQueryHelper>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ITicketAssignService, TicketAssignService>();
 builder.Services.AddScoped<ILookupService, LookupService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"]!;

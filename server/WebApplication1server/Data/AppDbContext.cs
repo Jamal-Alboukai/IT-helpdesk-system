@@ -15,6 +15,7 @@ namespace WebApplication1server.Data
         public DbSet<Priority> Priorities { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -200,6 +201,22 @@ namespace WebApplication1server.Data
                 new Status { Id = SeedConstants.ResolvedStatusId, Name = "Resolved", DisplayOrder = 4, IsActive = true },
                 new Status { Id = SeedConstants.ClosedStatusId, Name = "Closed", DisplayOrder = 5, IsActive = true }
             );
+            // ─── ActivityLog configuration ────────────────────────
+            modelBuilder.Entity<ActivityLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Action)
+                    .IsRequired()
+                    .HasMaxLength(255);
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Ticket)
+                      .WithMany()
+                      .HasForeignKey(e => e.TicketId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }
