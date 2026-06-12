@@ -16,6 +16,8 @@ namespace WebApplication1server.Data
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<TicketComment> TicketComments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -208,6 +210,36 @@ namespace WebApplication1server.Data
                 entity.Property(e => e.Action)
                     .IsRequired()
                     .HasMaxLength(255);
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Ticket)
+                      .WithMany()
+                      .HasForeignKey(e => e.TicketId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            // ─── TicketComment configuration ─────────────────────
+            modelBuilder.Entity<TicketComment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Content).IsRequired();
+                entity.HasOne(e => e.Ticket)
+                      .WithMany()
+                      .HasForeignKey(e => e.TicketId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Author)
+                      .WithMany()
+                      .HasForeignKey(e => e.AuthorId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            // ─── Notification configuration ───────────────────────
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Message)
+                    .IsRequired()
+                    .HasMaxLength(500);
                 entity.HasOne(e => e.User)
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
