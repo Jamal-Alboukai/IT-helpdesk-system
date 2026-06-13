@@ -70,14 +70,21 @@ namespace WebApplication1server.Controllers
         // ─── UPDATE TICKET ────────────────────────────────────
         // Rules enforced inside service per role
         [HttpPut("{id}")]
+       
         public async Task<IActionResult> UpdateTicket(
             Guid id, [FromBody] UpdateTicketDTO request)
-        {
-            var result = await _ticketService.UpdateTicketAsync(id, request, User);
-            if (result == null)
-                return NotFound(new { message = "Ticket not found or access denied" });
-            return Ok(result);
-        }
+                {
+                    var (result, error) = await _ticketService
+                        .UpdateTicketAsync(id, request, User);
+
+                    if (error != null)
+                        return BadRequest(new { message = error });
+
+                    if (result == null)
+                        return NotFound(new { message = "Ticket not found or access denied" });
+
+                    return Ok(result);
+                }
 
         // ─── DELETE TICKET ────────────────────────────────────
         // Employee: own + Open only
