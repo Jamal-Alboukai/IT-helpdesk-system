@@ -84,6 +84,33 @@ export interface UpdateTicketRequest {
   escalationNote?: string;
 }
 
+// ─── Comment Types ──────────────────────────────────────────
+export interface Comment {
+  id: string;
+  ticketId: string;
+  content: string;
+  isInternal: boolean;
+  authorName: string;
+  authorId: string;
+  authorRole: string;
+  createdAt: string;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  isInternal: boolean;
+}
+
+// ─── Activity Log Types ─────────────────────────────────────
+export interface ActivityLogEntry {
+  id: string;
+  action: string;
+  oldValue: string | null;
+  newValue: string | null;
+  performedBy: string;
+  createdAt: string;
+}
+
 // ─── Service ──────────────────────────────────────────────────
 export const ticketService = {
   getTickets: async (
@@ -153,6 +180,26 @@ export const ticketService = {
 
   getStatuses: async (): Promise<LookupItem[]> => {
     const response = await api.get('/statuses');
+    return response.data;
+  },
+
+  // ─── Comments ─────────────────────────────────────────────
+  getComments: async (ticketId: string): Promise<Comment[]> => {
+    const response = await api.get(`/ticket/${ticketId}/comment`);
+    return response.data;
+  },
+
+  addComment: async (
+    ticketId: string,
+    data: CreateCommentRequest
+  ): Promise<Comment> => {
+    const response = await api.post(`/ticket/${ticketId}/comment`, data);
+    return response.data;
+  },
+
+  // ─── Activity Log ───────────────────────────────────────────
+  getTicketHistory: async (ticketId: string): Promise<ActivityLogEntry[]> => {
+    const response = await api.get(`/ticket/${ticketId}/history`);
     return response.data;
   },
 };

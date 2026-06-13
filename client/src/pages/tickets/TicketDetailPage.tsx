@@ -6,6 +6,8 @@ import {
   TicketDetail,
   LookupItem
 } from '../../services/ticketService';
+import CommentSection from '../../components/tickets/CommentSection';
+import HistoryTimeline from '../../components/tickets/HistoryTimeline';
 
 // ─── Priority badge ────────────────────────────────────────────
 function PriorityBadge({ priority }: { priority: string }) {
@@ -85,11 +87,16 @@ export default function TicketDetailPage() {
   async function handleStatusChange(statusId: string) {
     if (!ticket) return;
     setActionLoading(true);
+    setError('');
     try {
       const updated = await ticketService.updateTicket(ticket.id, { statusId });
       setTicket(updated);
-    } catch {
-      setError('Failed to update status.');
+    } catch (err: any) {
+      if (err.response?.status === 400) {
+        setError(err.response.data.message || 'Invalid status transition.');
+      } else {
+        setError('Failed to update status.');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -270,6 +277,16 @@ export default function TicketDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Comments */}
+            <CommentSection
+              ticketId={ticket.id}
+              isClosed={ticket.status === 'Closed'}
+              canAddInternal={isAgent || isAdmin}
+            />
+
+            {/* History */}
+            <HistoryTimeline ticketId={ticket.id} />
 
           </div>
 
