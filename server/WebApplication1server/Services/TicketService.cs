@@ -15,7 +15,7 @@ namespace WebApplication1server.Services
             Guid id, ClaimsPrincipal userClaims);
         Task<TicketResponseDTO> CreateTicketAsync(
             CreateTicketDTO request, ClaimsPrincipal userClaims);
-        Task<TicketResponseDTO?> UpdateTicketAsync(
+        Task<(TicketResponseDTO? ticket, string? error)> UpdateTicketAsync(
             Guid id, UpdateTicketDTO request, ClaimsPrincipal userClaims);
         Task<bool> DeleteTicketAsync(
             Guid id, ClaimsPrincipal userClaims);
@@ -26,15 +26,18 @@ namespace WebApplication1server.Services
         private readonly AppDbContext _context;
         private readonly ITicketQueryHelper _queryHelper;
         private readonly IActivityLogService _activityLog;
+        private readonly INotificationService _notificationService;
 
         public TicketService(
             AppDbContext context,
             ITicketQueryHelper queryHelper,
-            IActivityLogService activityLog)
+            IActivityLogService activityLog,
+            INotificationService notificationService)
         {
             _context = context;
             _queryHelper = queryHelper;
             _activityLog = activityLog;
+            _notificationService = notificationService;
         }
 
         // ─── GET ALL TICKETS ──────────────────────────────────
@@ -97,7 +100,8 @@ namespace WebApplication1server.Services
                 TotalCount = totalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize)
+                TotalPages = (int)Math.Ceiling(
+                    (double)totalCount / filter.PageSize)
             };
         }
 
@@ -112,10 +116,10 @@ namespace WebApplication1server.Services
 
             if (ticket == null) return null;
 
-            if (role == RoleConstants.Employee && ticket.CreatedById != userId)
-                return null;
-            if (role == RoleConstants.ITSupportAgent && ticket.AssignedToId != userId)
-                return null;
+            if (role == RoleConstants.Employee &&
+                ticket.CreatedById != userId) return null;
+            if (role == RoleConstants.ITSupportAgent &&
+                ticket.AssignedToId != userId) return null;
 
             return _queryHelper.MapToResponse(ticket);
         }
@@ -129,7 +133,8 @@ namespace WebApplication1server.Services
             var ticket = new Ticket
             {
                 Id = Guid.NewGuid(),
-                ReferenceNumber = await _queryHelper.GenerateReferenceNumberAsync(),
+                ReferenceNumber = await _queryHelper
+                    .GenerateReferenceNumberAsync(),
                 Title = request.Title,
                 Description = request.Description,
                 CategoryId = request.CategoryId,
@@ -146,13 +151,11 @@ namespace WebApplication1server.Services
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
 
-            // Log ticket creation
             await _activityLog.LogAsync(
                 userId: userId,
                 action: "Ticket Created",
                 ticketId: ticket.Id,
-                newValue: ticket.ReferenceNumber
-            );
+                newValue: ticket.ReferenceNumber);
 
             var created = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
@@ -161,7 +164,8 @@ namespace WebApplication1server.Services
         }
 
         // ─── UPDATE TICKET ────────────────────────────────────
-        public async Task<TicketResponseDTO?> UpdateTicketAsync(
+        // Returns (ticket, error) — error is null on success
+        public async Task<(TicketResponseDTO? ticket, string? error)> UpdateTicketAsync(
             Guid id, UpdateTicketDTO request, ClaimsPrincipal userClaims)
         {
             var (userId, role) = _queryHelper.GetUserInfo(userClaims);
@@ -169,13 +173,15 @@ namespace WebApplication1server.Services
             var ticket = await _queryHelper.BaseTicketQuery()
                 .FirstOrDefaultAsync(t => t.Id == id);
 
-            if (ticket == null) return null;
+            if (ticket == null) return (null, "Ticket not found");
 
             // ── Employee ──────────────────────────────────────
             if (role == RoleConstants.Employee)
             {
-                if (ticket.CreatedById != userId) return null;
-                if (ticket.StatusId != SeedConstants.OpenStatusId) return null;
+                if (ticket.CreatedById != userId)
+                    return (null, "Access denied");
+                if (ticket.StatusId != SeedConstants.OpenStatusId)
+                    return (null, "You can only edit Open tickets");
 
                 if (request.Title != null)
                 {
@@ -195,22 +201,40 @@ namespace WebApplication1server.Services
             // ── ITSupportAgent ────────────────────────────────
             else if (role == RoleConstants.ITSupportAgent)
             {
-                if (ticket.AssignedToId != userId) return null;
+                if (ticket.AssignedToId != userId)
+                    return (null, "Access denied");
 
                 if (request.StatusId != null)
                 {
-                    // Get old and new status names for log
-                    var oldStatus = ticket.Status.Name;
-                    ticket.StatusId = request.StatusId.Value;
+                    // ── Validate status transition ─────────────
+                    if (!StatusTransitionHelper.IsValidTransition(
+                        ticket.StatusId, request.StatusId.Value))
+                    {
+                        var allowed = StatusTransitionHelper
+                            .GetAllowedNextStatuses(ticket.StatusId);
+                        var allowedNames = await _context.Statuses
+                            .Where(s => allowed.Contains(s.Id))
+                            .Select(s => s.Name)
+                            .ToListAsync();
+                        return (null,
+                            $"Invalid status transition. Allowed: " +
+                            $"{string.Join(", ", allowedNames)}");
+                    }
 
-                    // Reload status name for log
-                    var newStatus = await _context.Statuses
+                    var oldStatus = ticket.Status.Name;
+                    var newStatusName = await _context.Statuses
                         .Where(s => s.Id == request.StatusId.Value)
                         .Select(s => s.Name)
                         .FirstOrDefaultAsync();
 
+                    ticket.StatusId = request.StatusId.Value;
+
                     await _activityLog.LogAsync(userId, "Status Changed",
-                        ticket.Id, oldStatus, newStatus);
+                        ticket.Id, oldStatus, newStatusName);
+
+                    // Notify ticket creator of status change
+                    await _notificationService.NotifyStatusChangedAsync(
+                        ticket, oldStatus, newStatusName ?? string.Empty);
 
                     if (request.StatusId == SeedConstants.ResolvedStatusId)
                     {
@@ -218,23 +242,27 @@ namespace WebApplication1server.Services
                         ticket.ResolvedAt = DateTime.UtcNow;
                     }
                 }
+
                 if (request.CategoryId != null)
                 {
                     await _activityLog.LogAsync(userId, "Category Updated",
-                        ticket.Id, ticket.Category.Name, request.CategoryId.ToString());
+                        ticket.Id, ticket.Category.Name,
+                        request.CategoryId.ToString());
                     ticket.CategoryId = request.CategoryId.Value;
                 }
                 if (request.PriorityId != null)
                 {
                     await _activityLog.LogAsync(userId, "Priority Updated",
-                        ticket.Id, ticket.Priority.Name, request.PriorityId.ToString());
+                        ticket.Id, ticket.Priority.Name,
+                        request.PriorityId.ToString());
                     ticket.PriorityId = request.PriorityId.Value;
                 }
                 if (request.EscalationRequested == true)
                 {
                     ticket.EscalationRequested = true;
                     ticket.EscalationNote = request.EscalationNote;
-                    await _activityLog.LogAsync(userId, "Escalation Requested",
+                    await _activityLog.LogAsync(userId,
+                        "Escalation Requested",
                         ticket.Id, null, request.EscalationNote);
                 }
             }
@@ -257,29 +285,50 @@ namespace WebApplication1server.Services
                 if (request.CategoryId != null)
                 {
                     await _activityLog.LogAsync(userId, "Category Updated",
-                        ticket.Id, ticket.Category.Name, request.CategoryId.ToString());
+                        ticket.Id, ticket.Category.Name,
+                        request.CategoryId.ToString());
                     ticket.CategoryId = request.CategoryId.Value;
                 }
                 if (request.PriorityId != null)
                 {
                     await _activityLog.LogAsync(userId, "Priority Updated",
-                        ticket.Id, ticket.Priority.Name, request.PriorityId.ToString());
+                        ticket.Id, ticket.Priority.Name,
+                        request.PriorityId.ToString());
                     ticket.PriorityId = request.PriorityId.Value;
                 }
                 if (request.DueAt != null) ticket.DueAt = request.DueAt;
 
                 if (request.StatusId != null)
                 {
-                    var oldStatus = ticket.Status.Name;
-                    ticket.StatusId = request.StatusId.Value;
+                    // ── Admin also validates transitions ───────
+                    if (!StatusTransitionHelper.IsValidTransition(
+                        ticket.StatusId, request.StatusId.Value))
+                    {
+                        var allowed = StatusTransitionHelper
+                            .GetAllowedNextStatuses(ticket.StatusId);
+                        var allowedNames = await _context.Statuses
+                            .Where(s => allowed.Contains(s.Id))
+                            .Select(s => s.Name)
+                            .ToListAsync();
+                        return (null,
+                            $"Invalid status transition. Allowed: " +
+                            $"{string.Join(", ", allowedNames)}");
+                    }
 
-                    var newStatus = await _context.Statuses
+                    var oldStatus = ticket.Status.Name;
+                    var newStatusName = await _context.Statuses
                         .Where(s => s.Id == request.StatusId.Value)
                         .Select(s => s.Name)
                         .FirstOrDefaultAsync();
 
+                    ticket.StatusId = request.StatusId.Value;
+
                     await _activityLog.LogAsync(userId, "Status Changed",
-                        ticket.Id, oldStatus, newStatus);
+                        ticket.Id, oldStatus, newStatusName);
+
+                    // Notify on status change
+                    await _notificationService.NotifyStatusChangedAsync(
+                        ticket, oldStatus, newStatusName ?? string.Empty);
 
                     if (request.StatusId == SeedConstants.ResolvedStatusId)
                     {
@@ -296,7 +345,8 @@ namespace WebApplication1server.Services
                 if (request.AssignedToId != null)
                 {
                     var assignedUser = await _context.Users
-                        .FirstOrDefaultAsync(u => u.Id == request.AssignedToId);
+                        .FirstOrDefaultAsync(u =>
+                            u.Id == request.AssignedToId);
                     await _activityLog.LogAsync(userId, "Ticket Assigned",
                         ticket.Id, ticket.AssignedTo?.FirstName,
                         $"{assignedUser?.FirstName} {assignedUser?.LastName}");
@@ -311,7 +361,7 @@ namespace WebApplication1server.Services
             // ── Manager — read only ───────────────────────────
             else if (role == RoleConstants.Manager)
             {
-                return null;
+                return (null, "Managers have read-only access");
             }
 
             ticket.LastUpdatedById = userId;
@@ -321,7 +371,7 @@ namespace WebApplication1server.Services
             var updated = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
 
-            return _queryHelper.MapToResponse(updated);
+            return (_queryHelper.MapToResponse(updated), null);
         }
 
         // ─── DELETE TICKET ────────────────────────────────────
@@ -355,12 +405,10 @@ namespace WebApplication1server.Services
 
             await _context.SaveChangesAsync();
 
-            // Log ticket closure
             await _activityLog.LogAsync(
                 userId: userId,
                 action: "Ticket Closed",
-                ticketId: ticket.Id
-            );
+                ticketId: ticket.Id);
 
             return true;
         }

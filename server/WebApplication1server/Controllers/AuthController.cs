@@ -42,6 +42,8 @@ namespace WebApplication1server.Controllers
         public async Task<IActionResult> ChangePassword(
     [FromBody] ChangePasswordDTO request)
         {
+           
+
             // Validate request
             if (string.IsNullOrEmpty(request.CurrentPassword) ||
                 string.IsNullOrEmpty(request.NewPassword))
@@ -71,6 +73,7 @@ namespace WebApplication1server.Controllers
                 message = "Password changed successfully",
                 token = result.Token
             });
+
         }
     }
 }

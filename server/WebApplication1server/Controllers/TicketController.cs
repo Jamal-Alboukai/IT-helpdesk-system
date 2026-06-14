@@ -31,8 +31,11 @@ namespace WebApplication1server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTickets([FromQuery] TicketFilterDTO filter)
         {
-            var result = await _ticketService.GetTicketsAsync(filter, User);
+
+          var result = await _ticketService.GetTicketsAsync(filter, User);
             return Ok(result);
+
+        
         }
 
         // ─── GET TICKET BY ID ─────────────────────────────────
@@ -70,14 +73,21 @@ namespace WebApplication1server.Controllers
         // ─── UPDATE TICKET ────────────────────────────────────
         // Rules enforced inside service per role
         [HttpPut("{id}")]
+       
         public async Task<IActionResult> UpdateTicket(
             Guid id, [FromBody] UpdateTicketDTO request)
-        {
-            var result = await _ticketService.UpdateTicketAsync(id, request, User);
-            if (result == null)
-                return NotFound(new { message = "Ticket not found or access denied" });
-            return Ok(result);
-        }
+                {
+                    var (result, error) = await _ticketService
+                        .UpdateTicketAsync(id, request, User);
+
+                    if (error != null)
+                        return BadRequest(new { message = error });
+
+                    if (result == null)
+                        return NotFound(new { message = "Ticket not found or access denied" });
+
+                    return Ok(result);
+                }
 
         // ─── DELETE TICKET ────────────────────────────────────
         // Employee: own + Open only

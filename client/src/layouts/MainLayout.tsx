@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from '../components/common/NotificationBell';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -110,9 +111,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      {/* ─── Main content ─────────────────────────────────── */}
-      <div className="flex-1 overflow-auto">
-        {children}
+      {/* ─── Main area ─────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Top header bar */}
+        <div className="flex items-center justify-end gap-2 px-6 py-3
+          border-b border-gray-700 bg-gray-800/50">
+          <NotificationBell />
+        </div>
+
+        {/* Page content */}
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
+
       </div>
 
     </div>

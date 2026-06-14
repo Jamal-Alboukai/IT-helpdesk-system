@@ -17,15 +17,18 @@ namespace WebApplication1server.Services
         private readonly AppDbContext _context;
         private readonly ITicketQueryHelper _queryHelper;
         private readonly IActivityLogService _activityLog;
+        private readonly INotificationService _notificationService;
 
         public TicketAssignService(
             AppDbContext context,
             ITicketQueryHelper queryHelper,
-            IActivityLogService activityLog)
+            IActivityLogService activityLog,
+            INotificationService notificationService)
         {
             _context = context;
             _queryHelper = queryHelper;
             _activityLog = activityLog;
+            _notificationService = notificationService;
         }
 
         // ─── ASSIGN TICKET — Admin only ───────────────────────
@@ -70,6 +73,10 @@ namespace WebApplication1server.Services
                 oldValue: oldAssignee,
                 newValue: $"{assignedUser.FirstName} {assignedUser.LastName}"
             );
+
+            // Notify the assigned agent
+            await _notificationService.NotifyTicketAssignedAsync(
+                ticket, request.AssignedToId);
 
             var updated = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);
