@@ -118,9 +118,9 @@ it-helpdesk-system/
 |---|---|---|
 | Week 1 | 🔄 done | Wireframes, ERD, Schema, Repo setup |
 | Week 2 | 🔄 done| Auth system |
-| Week 3 | ⏳ Pending | Ticket module |
-| Week 4 | ⏳ Pending | Workflow |
-| Week 5 | ⏳ Pending | Dashboard |
+| Week 3 | 🔄 done | Ticket module |
+| Week 4 | 🔄 done | Workflow |
+| Week 5 | ⏳ InProgress | Dashboard |
 | Week 6 | ⏳ Pending | Reports & AI |
 | Week 7 | ⏳ Pending | Testing |
 | Week 8 | ⏳ Pending | Deployment |
