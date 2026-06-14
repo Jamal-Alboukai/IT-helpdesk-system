@@ -8,6 +8,9 @@ using WebApplication1server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Clear default claim type mappings globally
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 // Add services to the container
 builder.Services.AddControllers();
 
@@ -37,6 +40,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,

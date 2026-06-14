@@ -31,8 +31,11 @@ namespace WebApplication1server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTickets([FromQuery] TicketFilterDTO filter)
         {
-            var result = await _ticketService.GetTicketsAsync(filter, User);
+
+          var result = await _ticketService.GetTicketsAsync(filter, User);
             return Ok(result);
+
+        
         }
 
         // ─── GET TICKET BY ID ─────────────────────────────────
