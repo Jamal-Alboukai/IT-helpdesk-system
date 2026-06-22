@@ -29,6 +29,7 @@ builder.Services.AddScoped<ILookupService, LookupService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"]!;
@@ -50,7 +51,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(secretKey))
+            Encoding.UTF8.GetBytes(secretKey)),
+
+        NameClaimType = "nameid"
+
     };
 });
 

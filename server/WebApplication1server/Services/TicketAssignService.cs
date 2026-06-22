@@ -18,17 +18,20 @@ namespace WebApplication1server.Services
         private readonly ITicketQueryHelper _queryHelper;
         private readonly IActivityLogService _activityLog;
         private readonly INotificationService _notificationService;
+        private readonly IEmailService _emailService;
 
         public TicketAssignService(
             AppDbContext context,
             ITicketQueryHelper queryHelper,
             IActivityLogService activityLog,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IEmailService emailService)
         {
             _context = context;
             _queryHelper = queryHelper;
             _activityLog = activityLog;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         // ─── ASSIGN TICKET — Admin only ───────────────────────
@@ -77,6 +80,13 @@ namespace WebApplication1server.Services
             // Notify the assigned agent
             await _notificationService.NotifyTicketAssignedAsync(
                 ticket, request.AssignedToId);
+
+            // Send email to assigned agent
+            await _emailService.SendTicketAssignedEmailAsync(
+                assignedUser.Email,
+                $"{assignedUser.FirstName} {assignedUser.LastName}",
+                ticket.ReferenceNumber,
+                ticket.Title);
 
             var updated = await _queryHelper.BaseTicketQuery()
                 .FirstAsync(t => t.Id == ticket.Id);

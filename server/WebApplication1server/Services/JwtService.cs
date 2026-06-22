@@ -41,7 +41,7 @@ namespace WebApplication1server.Services
                 new Claim("email", user.Email),
                 new Claim("given_name", user.FirstName),
                 new Claim("family_name", user.LastName),
-                new Claim("role", roleName),
+                new Claim(ClaimTypes.Role, roleName),
                 new Claim("ForcePasswordChange",
                     user.ForcePasswordChange.ToString())
             };

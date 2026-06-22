@@ -26,7 +26,7 @@ namespace WebApplication1server.Helpers
         public (Guid userId, string role) GetUserInfo(ClaimsPrincipal userClaims)
         {
             var userId = Guid.Parse(userClaims.FindFirst("nameid")!.Value);
-            var role = userClaims.FindFirst("role")!.Value;
+            var role = userClaims.FindFirst(ClaimTypes.Role)!.Value;
             return (userId, role);
         }
 
