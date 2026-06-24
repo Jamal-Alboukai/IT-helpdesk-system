@@ -8,6 +8,7 @@ import {
 } from '../../services/ticketService';
 import CommentSection from '../../components/tickets/CommentSection';
 import HistoryTimeline from '../../components/tickets/HistoryTimeline';
+import AttachmentList from '../../components/tickets/AttachmentList';
 
 // ─── Priority badge ────────────────────────────────────────────
 function PriorityBadge({ priority }: { priority: string }) {
@@ -225,6 +226,9 @@ export default function TicketDetailPage() {
                 {ticket.description}
               </p>
             </div>
+            
+             {/* Attachments */}
+            <AttachmentList ticketId={ticket.id} />
 
             {/* Escalation note */}
             {ticket.escalationRequested && ticket.escalationNote && (

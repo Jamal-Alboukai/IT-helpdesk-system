@@ -1,6 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ticketService, LookupItem } from '../../services/ticketService';
+import { attachmentService } from '../../services/attachmentService';
+
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+  'application/pdf', 'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+];
+const MAX_SIZE = 5 * 1024 * 1024;
 
 export default function CreateTicketPage() {
   const navigate = useNavigate();
@@ -13,6 +22,11 @@ export default function CreateTicketPage() {
   const [dueAt, setDueAt] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // ─── File state ────────────────────────────────────────────
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ─── Lookup data ───────────────────────────────────────────
   const [categories, setCategories] = useState<LookupItem[]>([]);
@@ -38,12 +52,33 @@ export default function CreateTicketPage() {
     loadLookups();
   }, []);
 
+  // ─── File handlers ─────────────────────────────────────────
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    setFileError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError('File type not allowed. Use JPG, PNG, PDF, DOC, DOCX, or XLSX');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setFileError('File size exceeds 5MB limit');
+      return;
+    }
+    setSelectedFile(file);
+  }
+
+  function handleRemoveFile() {
+    setSelectedFile(null);
+    setFileError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   // ─── Submit ────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (!title.trim()) {
       setError('Title is required');
       return;
@@ -71,7 +106,15 @@ export default function CreateTicketPage() {
         dueAt: dueAt || undefined,
       });
 
-      // Redirect to ticket detail after creation
+      // Upload file if selected
+      if (selectedFile) {
+        try {
+          await attachmentService.upload(selectedFile, ticket.id);
+        } catch {
+          console.error('File upload failed');
+        }
+      }
+
       navigate(`/tickets/${ticket.id}`);
 
     } catch (err: any) {
@@ -149,8 +192,6 @@ export default function CreateTicketPage() {
 
             {/* Category + Priority */}
             <div className="grid grid-cols-2 gap-4">
-
-              {/* Category */}
               <div>
                 <label
                   htmlFor="category"
@@ -175,7 +216,6 @@ export default function CreateTicketPage() {
                 </select>
               </div>
 
-              {/* Priority */}
               <div>
                 <label
                   htmlFor="priority"
@@ -199,7 +239,6 @@ export default function CreateTicketPage() {
                   ))}
                 </select>
               </div>
-
             </div>
 
             {/* Description */}
@@ -244,6 +283,65 @@ export default function CreateTicketPage() {
                   focus:border-transparent transition"
                 disabled={loading}
               />
+            </div>
+
+            {/* Attachment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                Attachment
+                <span className="text-gray-500 font-normal ml-1">(optional)</span>
+              </label>
+              <div className="border border-dashed border-gray-600 rounded-lg p-4">
+                {selectedFile ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">
+                        {selectedFile.type.startsWith('image/') ? '🖼️' : '📄'}
+                      </span>
+                      <div>
+                        <p className="text-white text-xs font-medium">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          {attachmentService.formatFileSize(selectedFile.size)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="text-red-400 hover:text-red-300 text-xs transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileSelect}
+                      accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xlsx"
+                      className="hidden"
+                      id="ticket-file-upload"
+                      disabled={loading}
+                    />
+                    <label
+                      htmlFor="ticket-file-upload"
+                      className="cursor-pointer text-blue-400 hover:text-blue-300
+                        text-xs transition"
+                    >
+                      📎 Attach a file
+                    </label>
+                    <p className="text-gray-600 text-xs mt-0.5">
+                      JPG, PNG, PDF, DOC, XLSX — max 5MB
+                    </p>
+                  </div>
+                )}
+                {fileError && (
+                  <p className="text-red-400 text-xs mt-1">{fileError}</p>
+                )}
+              </div>
             </div>
 
             {/* Buttons */}
