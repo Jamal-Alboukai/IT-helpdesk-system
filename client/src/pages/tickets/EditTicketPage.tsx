@@ -29,7 +29,9 @@ export default function EditTicketPage() {
   const [categories, setCategories] = useState<LookupItem[]>([]);
   const [priorities, setPriorities] = useState<LookupItem[]>([]);
 
-  // ─── Load ticket and lookups ───────────────────────────────
+  // ─── Load ticket and lookups 
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ───────────────────────────────
   useEffect(() => {
     if (id) loadData();
   }, [id]);

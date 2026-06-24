@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ticketService, Comment } from '../../services/ticketService';
-import { attachmentService, Attachment } from '../../services/attachmentService';
+import { attachmentService } from '../../services/attachmentService';
 
 interface CommentSectionProps {
   ticketId: string;
@@ -23,7 +23,7 @@ export default function CommentSection({
   isClosed,
   canAddInternal
 }: CommentSectionProps) {
-  const { user } = useAuth();
+  
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);

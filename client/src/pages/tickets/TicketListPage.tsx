@@ -63,6 +63,8 @@ export default function TicketListPage() {
   const [statuses, setStatuses] = useState<LookupItem[]>([]);
 
   // ─── Load lookup data on mount ─────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     async function loadLookups() {
       try {
@@ -82,6 +84,7 @@ export default function TicketListPage() {
   }, []);
 
   // ─── Load tickets when filters change ──────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadTickets();
   }, [page, categoryId, priorityId, statusId]);

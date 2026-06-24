@@ -60,11 +60,13 @@ export default function TicketDetailPage() {
   const [statuses, setStatuses] = useState<LookupItem[]>([]);
 
   // ─── Load ticket ───────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (id) loadTicket();
   }, [id]);
 
   // ─── Load statuses for agent ───────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.role === 'ITSupportAgent' || user?.role === 'Admin') {
       ticketService.getStatuses().then(setStatuses).catch(() => {});
@@ -226,7 +228,7 @@ export default function TicketDetailPage() {
                 {ticket.description}
               </p>
             </div>
-            
+
              {/* Attachments */}
             <AttachmentList ticketId={ticket.id} />
 

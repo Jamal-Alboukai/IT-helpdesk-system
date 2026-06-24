@@ -33,6 +33,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   useEffect(() => {
     const token = getCookie('auth_token');
     if (token) {
