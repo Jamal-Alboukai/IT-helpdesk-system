@@ -13,6 +13,8 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 // Add services to the container
 builder.Services.AddControllers();
+// SignalR
+builder.Services.AddSignalR();
 
 // Database connection
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -67,7 +69,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+             .AllowCredentials();
     });
 });
 
@@ -79,5 +82,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// SignalR hub endpoint
+app.MapHub<WebApplication1server.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

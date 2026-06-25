@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using WebApplication1server.Data;
 using WebApplication1server.DTOs;
 using WebApplication1server.Helpers;
+using WebApplication1server.Hubs;
 using WebApplication1server.Models;
 
 namespace WebApplication1server.Services
@@ -37,16 +39,19 @@ namespace WebApplication1server.Services
     {
         private readonly AppDbContext _context;
         private readonly ITicketQueryHelper _queryHelper;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public NotificationService(
             AppDbContext context,
-            ITicketQueryHelper queryHelper)
+            ITicketQueryHelper queryHelper,
+            IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _queryHelper = queryHelper;
+            _hubContext = hubContext;
         }
 
-        // ─── Helper: Create notification ──────────────────────
+        // ─── Helper: Create notification + push via SignalR ───
         private async Task CreateAsync(
             Guid userId, string message, Guid? ticketId = null)
         {
@@ -62,10 +67,28 @@ namespace WebApplication1server.Services
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // ─── Push real-time via SignalR ───────────────────
+            // Send to the user's group (userId = group name)
+            await _hubContext.Clients
+                .Group(userId.ToString())
+                .SendAsync("ReceiveNotification", new NotificationResponseDTO
+                {
+                    Id = notification.Id,
+                    Message = notification.Message,
+                    TicketId = notification.TicketId,
+                    TicketReference = ticketId.HasValue
+                        ? await _context.Tickets
+                            .Where(t => t.Id == ticketId)
+                            .Select(t => t.ReferenceNumber)
+                            .FirstOrDefaultAsync()
+                        : null,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt
+                });
         }
 
         // ─── NOTIFY: Ticket Assigned ──────────────────────────
-        // Notifies the agent that a ticket was assigned to them
         public async Task NotifyTicketAssignedAsync(
             Ticket ticket, Guid agentId)
         {
@@ -77,7 +100,6 @@ namespace WebApplication1server.Services
         }
 
         // ─── NOTIFY: Status Changed ───────────────────────────
-        // Notifies the ticket creator when status changes
         public async Task NotifyStatusChangedAsync(
             Ticket ticket, string oldStatus, string newStatus)
         {
@@ -101,7 +123,6 @@ namespace WebApplication1server.Services
         }
 
         // ─── NOTIFY: Comment Added ────────────────────────────
-        // Notifies relevant users when a comment is added
         public async Task NotifyCommentAddedAsync(
             Ticket ticket, Guid commentAuthorId, bool isInternal)
         {
@@ -158,7 +179,7 @@ namespace WebApplication1server.Services
                 .Include(n => n.Ticket)
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedAt)
-                .Take(50) // Last 50 notifications
+                .Take(50)
                 .ToListAsync();
 
             return notifications.Select(n => new NotificationResponseDTO
@@ -192,7 +213,7 @@ namespace WebApplication1server.Services
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n =>
                     n.Id == notificationId &&
-                    n.UserId == userId); // Can only mark own notifications
+                    n.UserId == userId);
 
             if (notification == null) return false;
 

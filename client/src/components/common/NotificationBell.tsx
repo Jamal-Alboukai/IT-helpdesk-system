@@ -1,9 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as signalR from '@microsoft/signalr';
 import {
   notificationService,
   NotificationItem
 } from '../../services/notificationService';
+
+// ─── Helper: Get cookie ────────────────────────────────────────
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
 
 export default function NotificationBell() {
   const navigate = useNavigate();
@@ -12,18 +21,55 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
-  // ─── Poll unread count every 30s ───────────────────────────
+  // ─── SignalR connection ────────────────────────────────────
   useEffect(() => {
-    loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
+    const token = getCookie('auth_token');
+    if (!token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:5197/hubs/notifications', {
+        accessTokenFactory: () => token,
+        skipNegotiation: true,
+        transport: signalR.HttpTransportType.WebSockets
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    // ─── Listen for real-time notifications ───────────────
+    connection.on('ReceiveNotification', (notification: NotificationItem) => {
+      // Add to notifications list
+      setNotifications(prev => [notification, ...prev]);
+      // Increment unread count
+      setUnreadCount(c => c + 1);
+    });
+
+    // ─── Start connection ──────────────────────────────────
+    connection.start()
+      .then(() => console.log('SignalR connected'))
+      .catch(err => console.error('SignalR connection failed:', err));
+
+    connectionRef.current = connection;
+
+    // ─── Cleanup on unmount ────────────────────────────────
+    return () => {
+      connection.stop();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Close dropdown when clicking outside ──────────────────
+  // ─── Initial unread count load ─────────────────────────────
+  useEffect(() => {
+    loadUnreadCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Close dropdown when clicking outside ─────────────────
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     }
@@ -100,16 +146,17 @@ export default function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={toggleDropdown}
-        className="relative p-2 text-gray-400 hover:text-white 
+        className="relative p-2 text-gray-400 hover:text-white
           hover:bg-gray-700 rounded-lg transition"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center 
-            justify-center min-w-[18px] h-[18px] px-1 bg-red-500 
+          <span className="absolute -top-0.5 -right-0.5 flex items-center
+            justify-center min-w-[18px] h-[18px] px-1 bg-red-500
             text-white text-xs font-bold rounded-full">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
@@ -118,12 +165,12 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-gray-800 
-          border border-gray-700 rounded-xl shadow-xl z-50 
+        <div className="absolute right-0 mt-2 w-80 bg-gray-800
+          border border-gray-700 rounded-xl shadow-xl z-50
           max-h-96 overflow-hidden flex flex-col">
 
           {/* Header */}
-          <div className="flex items-center justify-between p-3 
+          <div className="flex items-center justify-between p-3
             border-b border-gray-700">
             <h3 className="text-white text-sm font-semibold">
               Notifications
@@ -159,7 +206,7 @@ export default function NotificationBell() {
                 >
                   <div className="flex items-start gap-2">
                     {!n.isRead && (
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full 
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full
                         bg-blue-500 flex-shrink-0" />
                     )}
                     <div className={!n.isRead ? '' : 'pl-3.5'}>
