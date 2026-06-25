@@ -9,6 +9,7 @@ import TicketDetailPage from './pages/tickets/TicketDetailPage';
 import EditTicketPage from './pages/tickets/EditTicketPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayout';
+import NotificationsPage from './pages/notifications/NotificationsPage';
 
 function App() {
   return (
@@ -95,6 +96,13 @@ function App() {
               </MainLayout>
             </ProtectedRoute>
           } />
+          <Route path="/notifications" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <NotificationsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" />} />

@@ -41,6 +41,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       icon: '⚙️',
       roles: ['Admin'],
     },
+      {
+    label: 'Notifications',
+    path: '/notifications',
+    icon: '🔔',
+    roles: ['Admin', 'Manager', 'ITSupportAgent', 'Employee'],
+  },
   ].filter(item => item.roles.includes(user?.role || ''));
 
   function isActive(path: string) {
