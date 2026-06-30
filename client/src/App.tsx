@@ -10,6 +10,7 @@ import EditTicketPage from './pages/tickets/EditTicketPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayout';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import UsersPage from './pages/users/UsersPage';
 
 function App() {
   return (
@@ -74,17 +75,12 @@ function App() {
           } />
 
           <Route path="/users" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <div className="p-6">
-                  <h1 className="text-2xl font-bold text-white">
-                    User Management
-                  </h1>
-                  <p className="text-gray-400 mt-2">Coming in Week 4.</p>
-                </div>
-              </MainLayout>
-            </ProtectedRoute>
-          } />
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <UsersPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
 
           <Route path="/settings" element={
             <ProtectedRoute>
