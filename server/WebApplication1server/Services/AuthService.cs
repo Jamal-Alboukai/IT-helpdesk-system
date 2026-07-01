@@ -24,11 +24,16 @@ namespace WebApplication1server.Services
     {
         private readonly AppDbContext _context;
         private readonly IJwtService _jwtService;
+        private readonly IEmailService _emailService;
 
-        public AuthService(AppDbContext context, IJwtService jwtService)
+        public AuthService(
+            AppDbContext context,
+            IJwtService jwtService,
+            IEmailService emailService)
         {
             _context = context;
             _jwtService = jwtService;
+            _emailService = emailService;
         }
 
         public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDTO request)
@@ -107,6 +112,11 @@ namespace WebApplication1server.Services
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Send password changed confirmation email
+            await _emailService.SendPasswordChangedEmailAsync(
+                user.Email,
+                $"{user.FirstName} {user.LastName}");
 
             // Issue new token with ForcePasswordChange = false
             var newToken = _jwtService.GenerateToken(user, user.Role.Name);

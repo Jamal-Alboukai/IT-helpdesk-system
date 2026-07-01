@@ -6,8 +6,10 @@ import {
   TicketDetail,
   LookupItem
 } from '../../services/ticketService';
+import { userService, AgentLookup } from '../../services/userService';
 import CommentSection from '../../components/tickets/CommentSection';
 import HistoryTimeline from '../../components/tickets/HistoryTimeline';
+import AttachmentList from '../../components/tickets/AttachmentList';
 
 // ─── Priority badge ────────────────────────────────────────────
 function PriorityBadge({ priority }: { priority: string }) {
@@ -58,15 +60,30 @@ export default function TicketDetailPage() {
   // ─── Status update ─────────────────────────────────────────
   const [statuses, setStatuses] = useState<LookupItem[]>([]);
 
+  // ─── Assign ticket — Admin only ─────────────────────────────
+  const [agents, setAgents] = useState<AgentLookup[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [assigning, setAssigning] = useState(false);
+
   // ─── Load ticket ───────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (id) loadTicket();
   }, [id]);
 
   // ─── Load statuses for agent ───────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.role === 'ITSupportAgent' || user?.role === 'Admin') {
       ticketService.getStatuses().then(setStatuses).catch(() => {});
+    }
+  }, [user]);
+
+  // ─── Load agents for Admin ──────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (user?.role === 'Admin') {
+      userService.getAgents().then(setAgents).catch(() => {});
     }
   }, [user]);
 
@@ -131,6 +148,22 @@ export default function TicketDetailPage() {
       setError('Failed to request escalation.');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  // ─── Assign / Reassign ticket (Admin) ─────────────────────
+  async function handleAssign() {
+    if (!ticket || !selectedAgentId) return;
+    setAssigning(true);
+    setError('');
+    try {
+      const updated = await ticketService.assignTicket(ticket.id, selectedAgentId);
+      setTicket(updated);
+      setSelectedAgentId('');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to assign ticket.');
+    } finally {
+      setAssigning(false);
     }
   }
 
@@ -225,6 +258,9 @@ export default function TicketDetailPage() {
                 {ticket.description}
               </p>
             </div>
+
+             {/* Attachments */}
+            <AttachmentList ticketId={ticket.id} />
 
             {/* Escalation note */}
             {ticket.escalationRequested && ticket.escalationNote && (
@@ -359,6 +395,44 @@ export default function TicketDetailPage() {
             {/* ─── Actions ──────────────────────────────── */}
             <div className="bg-gray-800 rounded-xl p-5 space-y-3">
               <h2 className="text-sm font-medium text-gray-400">Actions</h2>
+
+              {/* Assign Ticket — Admin only */}
+              {isAdmin && ticket.status !== 'Closed' && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1.5">
+                    {ticket.assignedTo ? 'Reassign Ticket' : 'Assign Ticket'}
+                  </p>
+                  {ticket.escalationRequested && (
+                    <div className="mb-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                      <p className="text-red-400 text-xs">
+                        ⚠️ Escalation: {ticket.escalationNote}
+                      </p>
+                    </div>
+                  )}
+                  <select
+                    value={selectedAgentId}
+                    onChange={(e) => setSelectedAgentId(e.target.value)}
+                    disabled={assigning}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600
+                      rounded-lg text-white text-sm mb-2
+                      focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select agent...</option>
+                    {agents.map(a => (
+                      <option key={a.id} value={a.id}>{a.fullName}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssign}
+                    disabled={!selectedAgentId || assigning}
+                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700
+                      disabled:opacity-50 text-white text-sm
+                      font-medium rounded-lg transition"
+                  >
+                    {assigning ? 'Assigning...' : ticket.assignedTo ? 'Reassign' : 'Assign'}
+                  </button>
+                </div>
+              )}
 
               {/* Edit — Employee (own+Open) or Admin */}
               {canEdit && (

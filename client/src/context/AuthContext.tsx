@@ -6,7 +6,8 @@ interface TokenPayload {
   email: string;
   given_name: string;
   family_name: string;
-  role: string;
+  // Long URL claim name used by ASP.NET Core
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
   ForcePasswordChange: string;
   exp: number;
 }
@@ -32,7 +33,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  // On app load check if token exists in cookie
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   useEffect(() => {
     const token = getCookie('auth_token');
     if (token) {
@@ -49,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function decodeAndSetUser(token: string) {
     try {
-      // Use jwtDecode — safe, no eval, CSP compliant
       const decoded = jwtDecode<TokenPayload>(token);
 
       // Check token expiry
@@ -59,12 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Read role from long URL claim name
+      const role = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
       setUser({
         id: decoded.nameid,
         email: decoded.email,
         firstName: decoded.given_name,
         lastName: decoded.family_name,
-        role: decoded.role,
+        role: role,
         forcePasswordChange: decoded.ForcePasswordChange === 'True'
       });
     } catch {
@@ -73,13 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function login(token: string) {
-    // Store token in secure cookie
     document.cookie = `auth_token=${token}; path=/; SameSite=Strict; max-age=${7 * 24 * 60 * 60}`;
     decodeAndSetUser(token);
   }
 
   function logout() {
-    // Clear cookie
     document.cookie = 'auth_token=; path=/; max-age=0';
     setUser(null);
   }

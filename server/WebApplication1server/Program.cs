@@ -13,6 +13,8 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 // Add services to the container
 builder.Services.AddControllers();
+// SignalR
+builder.Services.AddSignalR();
 
 // Database connection
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -29,6 +31,13 @@ builder.Services.AddScoped<ILookupService, LookupService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IReportsService, ReportsService>();
+builder.Services.AddScoped<IActivityLogViewService, ActivityLogViewService>();
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"]!;
@@ -50,7 +59,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(secretKey))
+            Encoding.UTF8.GetBytes(secretKey)),
+
+        NameClaimType = "nameid"
+
     };
 });
 
@@ -61,7 +73,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+             .AllowCredentials();
     });
 });
 
@@ -73,5 +86,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// SignalR hub endpoint
+app.MapHub<WebApplication1server.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

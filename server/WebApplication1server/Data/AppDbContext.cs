@@ -18,6 +18,7 @@ namespace WebApplication1server.Data
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<TicketComment> TicketComments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<TicketAttachment> TicketAttachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -247,6 +248,32 @@ namespace WebApplication1server.Data
                 entity.HasOne(e => e.Ticket)
                       .WithMany()
                       .HasForeignKey(e => e.TicketId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            // ─── TicketAttachment configuration ──────────────────
+            modelBuilder.Entity<TicketAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FileName)
+                    .IsRequired()
+                    .HasMaxLength(255);
+                entity.Property(e => e.StoredFileName)
+                    .IsRequired()
+                    .HasMaxLength(255);
+                entity.Property(e => e.ContentType)
+                    .IsRequired()
+                    .HasMaxLength(100);
+                entity.HasOne(e => e.Ticket)
+                      .WithMany()
+                      .HasForeignKey(e => e.TicketId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Comment)
+                      .WithMany()
+                      .HasForeignKey(e => e.CommentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.UploadedBy)
+                      .WithMany()
+                      .HasForeignKey(e => e.UploadedById)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

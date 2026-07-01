@@ -27,17 +27,20 @@ namespace WebApplication1server.Services
         private readonly ITicketQueryHelper _queryHelper;
         private readonly IActivityLogService _activityLog;
         private readonly INotificationService _notificationService;
+        private readonly IEmailService _emailService;
 
         public TicketService(
             AppDbContext context,
             ITicketQueryHelper queryHelper,
             IActivityLogService activityLog,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IEmailService emailService)
         {
             _context = context;
             _queryHelper = queryHelper;
             _activityLog = activityLog;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         // ─── GET ALL TICKETS ──────────────────────────────────
@@ -164,7 +167,6 @@ namespace WebApplication1server.Services
         }
 
         // ─── UPDATE TICKET ────────────────────────────────────
-        // Returns (ticket, error) — error is null on success
         public async Task<(TicketResponseDTO? ticket, string? error)> UpdateTicketAsync(
             Guid id, UpdateTicketDTO request, ClaimsPrincipal userClaims)
         {
@@ -206,7 +208,6 @@ namespace WebApplication1server.Services
 
                 if (request.StatusId != null)
                 {
-                    // ── Validate status transition ─────────────
                     if (!StatusTransitionHelper.IsValidTransition(
                         ticket.StatusId, request.StatusId.Value))
                     {
@@ -232,7 +233,6 @@ namespace WebApplication1server.Services
                     await _activityLog.LogAsync(userId, "Status Changed",
                         ticket.Id, oldStatus, newStatusName);
 
-                    // Notify ticket creator of status change
                     await _notificationService.NotifyStatusChangedAsync(
                         ticket, oldStatus, newStatusName ?? string.Empty);
 
@@ -240,6 +240,18 @@ namespace WebApplication1server.Services
                     {
                         ticket.ResolvedById = userId;
                         ticket.ResolvedAt = DateTime.UtcNow;
+
+                        // Send email to ticket creator when resolved
+                        var creator = await _context.Users
+                            .FirstOrDefaultAsync(u => u.Id == ticket.CreatedById);
+                        if (creator != null)
+                        {
+                            await _emailService.SendTicketResolvedEmailAsync(
+                                creator.Email,
+                                $"{creator.FirstName} {creator.LastName}",
+                                ticket.ReferenceNumber,
+                                ticket.Title);
+                        }
                     }
                 }
 
@@ -300,7 +312,6 @@ namespace WebApplication1server.Services
 
                 if (request.StatusId != null)
                 {
-                    // ── Admin also validates transitions ───────
                     if (!StatusTransitionHelper.IsValidTransition(
                         ticket.StatusId, request.StatusId.Value))
                     {
@@ -326,7 +337,6 @@ namespace WebApplication1server.Services
                     await _activityLog.LogAsync(userId, "Status Changed",
                         ticket.Id, oldStatus, newStatusName);
 
-                    // Notify on status change
                     await _notificationService.NotifyStatusChangedAsync(
                         ticket, oldStatus, newStatusName ?? string.Empty);
 
@@ -334,7 +344,20 @@ namespace WebApplication1server.Services
                     {
                         ticket.ResolvedById = userId;
                         ticket.ResolvedAt = DateTime.UtcNow;
+
+                        // Send email to ticket creator when resolved
+                        var creator = await _context.Users
+                            .FirstOrDefaultAsync(u => u.Id == ticket.CreatedById);
+                        if (creator != null)
+                        {
+                            await _emailService.SendTicketResolvedEmailAsync(
+                                creator.Email,
+                                $"{creator.FirstName} {creator.LastName}",
+                                ticket.ReferenceNumber,
+                                ticket.Title);
+                        }
                     }
+
                     if (request.StatusId == SeedConstants.ClosedStatusId)
                     {
                         ticket.ClosedById = userId;
