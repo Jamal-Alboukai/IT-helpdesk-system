@@ -11,6 +11,9 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayout';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import UsersPage from './pages/users/UsersPage';
+import SettingsPage from './pages/settings/SettingsPage';
+import ReportsPage from './pages/reports/ReportsPage';
+import ActivityLogPage from './pages/logs/ActivityLogPage';
 
 function App() {
   return (
@@ -66,10 +69,7 @@ function App() {
           <Route path="/reports" element={
             <ProtectedRoute>
               <MainLayout>
-                <div className="p-6">
-                  <h1 className="text-2xl font-bold text-white">Reports</h1>
-                  <p className="text-gray-400 mt-2">Coming in Week 6.</p>
-                </div>
+                <ReportsPage />
               </MainLayout>
             </ProtectedRoute>
           } />
@@ -83,15 +83,19 @@ function App() {
                 } />
 
           <Route path="/settings" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <div className="p-6">
-                  <h1 className="text-2xl font-bold text-white">Settings</h1>
-                  <p className="text-gray-400 mt-2">Coming in Week 7.</p>
-                </div>
-              </MainLayout>
-            </ProtectedRoute>
-          } />
+              <ProtectedRoute>
+                <MainLayout>
+                  <SettingsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/logs" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ActivityLogPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
           <Route path="/notifications" element={
               <ProtectedRoute>
                 <MainLayout>
@@ -99,6 +103,8 @@ function App() {
                 </MainLayout>
               </ProtectedRoute>
             } />
+          
+
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" />} />

@@ -41,11 +41,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       icon: '⚙️',
       roles: ['Admin'],
     },
-      {
-    label: 'Notifications',
-    path: '/notifications',
-    icon: '🔔',
-    roles: ['Admin', 'Manager', 'ITSupportAgent', 'Employee'],
+        {
+      label: 'Notifications',
+      path: '/notifications',
+      icon: '🔔',
+      roles: ['Admin', 'Manager', 'ITSupportAgent', 'Employee'],
+    },
+    {
+    label: 'Activity Log',
+    path: '/logs',
+    icon: '📋',
+    roles: ['Admin', 'Manager', 'ITSupportAgent'],
   },
   ].filter(item => item.roles.includes(user?.role || ''));
 
