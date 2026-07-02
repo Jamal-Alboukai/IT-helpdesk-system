@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from '../components/common/NotificationBell';
+import AIChatbot from '../components/common/AIChatbot';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -41,18 +42,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       icon: '⚙️',
       roles: ['Admin'],
     },
-        {
+    {
       label: 'Notifications',
       path: '/notifications',
       icon: '🔔',
       roles: ['Admin', 'Manager', 'ITSupportAgent', 'Employee'],
     },
     {
-    label: 'Activity Log',
-    path: '/logs',
-    icon: '📋',
-    roles: ['Admin', 'Manager', 'ITSupportAgent'],
-  },
+      label: 'Activity Log',
+      path: '/logs',
+      icon: '📋',
+      roles: ['Admin', 'Manager', 'ITSupportAgent'],
+    },
   ].filter(item => item.roles.includes(user?.role || ''));
 
   function isActive(path: string) {
@@ -138,6 +139,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
 
       </div>
+
+      {/* ─── AI Chatbot — floats on every page ────────────── */}
+      <AIChatbot />
 
     </div>
   );
