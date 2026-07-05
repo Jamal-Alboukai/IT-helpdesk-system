@@ -170,7 +170,7 @@ export default function TicketDetailPage() {
   // ─── Loading state ─────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 md:p-6">
         <p className="text-gray-400">Loading ticket...</p>
       </div>
     );
@@ -179,7 +179,7 @@ export default function TicketDetailPage() {
   // ─── Error state ───────────────────────────────────────────
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 md:p-6">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error || 'Ticket not found'}</p>
           <button
@@ -208,11 +208,11 @@ export default function TicketDetailPage() {
   const canEscalate = isAgent && isAssigned && !ticket.escalationRequested;
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900 p-4 md:p-6">
       <div className="max-w-5xl mx-auto">
 
         {/* ─── Header ───────────────────────────────────── */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <button
             onClick={() => navigate('/tickets')}
             className="text-gray-400 hover:text-white transition"
@@ -244,10 +244,10 @@ export default function TicketDetailPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
 
           {/* ─── Left — Main content ───────────────────── */}
-          <div className="col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4">
 
             {/* Description */}
             <div className="bg-gray-800 rounded-xl p-5">
@@ -264,7 +264,7 @@ export default function TicketDetailPage() {
 
             {/* Escalation note */}
             {ticket.escalationRequested && ticket.escalationNote && (
-              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
+              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 md:p-5">
                 <h2 className="text-sm font-medium text-red-400 mb-2">
                   Escalation Note
                 </h2>
@@ -276,7 +276,7 @@ export default function TicketDetailPage() {
 
             {/* Escalation form */}
             {showEscalationForm && (
-              <div className="bg-gray-800 rounded-xl p-5">
+              <div className="bg-gray-800 rounded-xl p-4 md:p-5">
                 <h2 className="text-sm font-medium text-gray-300 mb-3">
                   Request Escalation
                 </h2>
@@ -290,11 +290,11 @@ export default function TicketDetailPage() {
                     focus:outline-none focus:ring-2 focus:ring-red-500
                     resize-none mb-3"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleEscalation}
                     disabled={!escalationNote.trim() || actionLoading}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700
+                    className="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700
                       disabled:opacity-50 text-white text-sm
                       font-medium rounded-lg transition"
                   >
@@ -305,7 +305,7 @@ export default function TicketDetailPage() {
                       setShowEscalationForm(false);
                       setEscalationNote('');
                     }}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600
+                    className="w-full sm:w-auto px-4 py-2 bg-gray-700 hover:bg-gray-600
                       text-gray-300 text-sm font-medium rounded-lg transition"
                   >
                     Cancel
@@ -330,7 +330,7 @@ export default function TicketDetailPage() {
           <div className="space-y-4">
 
             {/* Ticket info */}
-            <div className="bg-gray-800 rounded-xl p-5 space-y-4">
+            <div className="bg-gray-800 rounded-xl p-4 md:p-5 space-y-4">
               <h2 className="text-sm font-medium text-gray-400">
                 Ticket Details
               </h2>
@@ -393,7 +393,7 @@ export default function TicketDetailPage() {
             </div>
 
             {/* ─── Actions ──────────────────────────────── */}
-            <div className="bg-gray-800 rounded-xl p-5 space-y-3">
+            <div className="bg-gray-800 rounded-xl p-4 md:p-5 space-y-3">
               <h2 className="text-sm font-medium text-gray-400">Actions</h2>
 
               {/* Assign Ticket — Admin only */}

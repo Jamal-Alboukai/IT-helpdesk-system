@@ -117,12 +117,20 @@ export default function DashboardPage() {
     },
   ];
 
+  // ─── Shared tooltip style ──────────────────────────────────
+  const tooltipStyle = {
+    backgroundColor: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: '8px',
+    color: 'white'
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
 
       {/* ─── Header ─────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-xl md:text-2xl font-bold text-white">
           Welcome back, {user?.firstName}!
         </h1>
         <p className="text-gray-400 mt-1 text-sm">
@@ -135,16 +143,20 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── KPI Cards ──────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 2 cols on mobile → 4 cols on md → 8 cols on xl */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
         {kpiCards.map(card => (
           <div
             key={card.label}
-            className={`${card.bg} rounded-xl p-4 border-l-4 ${card.color}`}
+            className={`${card.bg} rounded-xl p-3 md:p-4
+              border-l-4 ${card.color}`}
           >
-            <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">
+            <p className="text-gray-400 text-xs font-medium
+              uppercase tracking-wide leading-tight">
               {card.label}
             </p>
-            <p className={`text-3xl font-bold mt-2 ${card.textColor}`}>
+            <p className={`text-2xl md:text-3xl font-bold
+              mt-1 md:mt-2 ${card.textColor}`}>
               {card.value}
             </p>
           </div>
@@ -152,10 +164,12 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Charts row 1 ───────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* 1 col on mobile → 2 cols on lg */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
         {/* Tickets by Status — Pie chart */}
-        <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+        <div className="bg-gray-800 rounded-xl p-4 md:p-5
+          border border-gray-700">
           <h2 className="text-sm font-medium text-gray-400 mb-4">
             Tickets by Status
           </h2>
@@ -164,37 +178,50 @@ export default function DashboardPage() {
               No data yet
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={stats.ticketsByStatus}
-                  dataKey="value"
-                  nameKey="label"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  labelLine={false}
-                >
-                  {stats.ticketsByStatus.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={stats.ticketsByStatus}
+                    dataKey="value"
+                    nameKey="label"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={75}
+                    // Labels hidden — legend below handles it
+                    label={false}
+                  >
+                    {stats.ticketsByStatus.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Legend — replaces pie labels, works on all screens */}
+              <div className="flex flex-wrap justify-center gap-x-4
+                gap-y-1 mt-2">
+                {stats.ticketsByStatus.map((entry, index) => (
+                  <div key={index}
+                    className="flex items-center gap-1.5">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className="text-gray-400 text-xs">
+                      {entry.label} ({entry.value})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
         {/* Tickets by Priority — Bar chart */}
-        <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+        <div className="bg-gray-800 rounded-xl p-4 md:p-5
+          border border-gray-700">
           <h2 className="text-sm font-medium text-gray-400 mb-4">
             Tickets by Priority
           </h2>
@@ -204,24 +231,23 @@ export default function DashboardPage() {
             </p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stats.ticketsByPriority}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <BarChart
+                data={stats.ticketsByPriority}
+                margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
                 />
                 <YAxis
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
                   allowDecimals={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {stats.ticketsByPriority.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
@@ -235,10 +261,11 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Charts row 2 ───────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
         {/* Tickets by Category — Bar chart */}
-        <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+        <div className="bg-gray-800 rounded-xl p-4 md:p-5
+          border border-gray-700">
           <h2 className="text-sm font-medium text-gray-400 mb-4">
             Tickets by Category
           </h2>
@@ -248,24 +275,28 @@ export default function DashboardPage() {
             </p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stats.ticketsByCategory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <BarChart
+                data={stats.ticketsByCategory}
+                margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                  tick={{ fill: '#94a3b8', fontSize: 10 }}
+                  interval={0}
+                  // Angle labels on small screens so they don't overlap
+                  angle={-20}
+                  textAnchor="end"
+                  height={40}
                 />
                 <YAxis
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
                   allowDecimals={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {stats.ticketsByCategory.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
@@ -277,29 +308,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Tickets over time — Line chart */}
-        <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+        <div className="bg-gray-800 rounded-xl p-4 md:p-5
+          border border-gray-700">
           <h2 className="text-sm font-medium text-gray-400 mb-4">
             Tickets Created — Last 7 Days
           </h2>
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={stats.ticketsOverTime}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <LineChart
+              data={stats.ticketsOverTime}
+              margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#334155"
+              />
               <XAxis
                 dataKey="date"
-                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                tick={{ fill: '#94a3b8', fontSize: 10 }}
               />
               <YAxis
-                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                tick={{ fill: '#94a3b8', fontSize: 11 }}
                 allowDecimals={false}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
+              <Tooltip contentStyle={tooltipStyle} />
               <Line
                 type="monotone"
                 dataKey="count"

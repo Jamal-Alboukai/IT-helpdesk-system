@@ -9,10 +9,12 @@ using WebApplication1server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Clear default claim type mappings globally
-System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler
+    .DefaultInboundClaimTypeMap.Clear();
 
 // Add services to the container
 builder.Services.AddControllers();
+
 // SignalR
 builder.Services.AddSignalR();
 
@@ -38,6 +40,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddScoped<IActivityLogViewService, ActivityLogViewService>();
+
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"]!;
@@ -60,9 +63,28 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(secretKey)),
-
         NameClaimType = "nameid"
+    };
 
+    // ─── Required for SignalR ──────────────────────────────
+    // SignalR cannot send Authorization headers over WebSockets
+    // so it passes the JWT as a query param instead.
+    // This tells the middleware to read it from there.
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/hubs/notifications"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -74,7 +96,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
-             .AllowCredentials();
+              .AllowCredentials();
     });
 });
 
@@ -86,7 +108,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 // SignalR hub endpoint
-app.MapHub<WebApplication1server.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<WebApplication1server.Hubs.NotificationHub>(
+    "/hubs/notifications");
 
 app.Run();

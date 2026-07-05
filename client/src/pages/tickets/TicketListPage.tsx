@@ -131,12 +131,12 @@ export default function TicketListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900 p-4 md:p-6">
 
       {/* ─── Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Tickets</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-white">Tickets</h1>
           <p className="text-gray-400 text-sm mt-1">
             {totalCount} ticket{totalCount !== 1 ? 's' : ''} found
           </p>
@@ -146,7 +146,7 @@ export default function TicketListPage() {
         {user?.role !== 'Manager' && (
           <button
             onClick={() => navigate('/tickets/new')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 
               text-white text-sm font-medium rounded-lg transition"
           >
             + New Ticket
@@ -156,7 +156,7 @@ export default function TicketListPage() {
 
       {/* ─── Filters ────────────────────────────────────── */}
       <div className="bg-gray-800 rounded-xl p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
           {/* Search */}
           <input
@@ -234,94 +234,96 @@ export default function TicketListPage() {
 
       {/* ─── Table ──────────────────────────────────────── */}
       <div className="bg-gray-800 rounded-xl overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-700">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Reference</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Title</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Category</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Priority</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Status</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Assigned To</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Created</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
-                  Loading tickets...
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Reference</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Title</th>
+                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Category</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Priority</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Status</th>
+                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Assigned To</th>
+                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Created</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase"></th>
               </tr>
-            ) : tickets.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
-                  No tickets found
-                </td>
-              </tr>
-            ) : (
-              tickets.map((ticket) => (
-                <tr
-                  key={ticket.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30 transition"
-                >
-                  <td className="px-4 py-3">
-                    <span className="text-blue-400 text-sm font-mono">
-                      {ticket.referenceNumber}
-                    </span>
-                    {ticket.escalationRequested && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-red-500/10 
-                        text-red-400 border border-red-500/20 
-                        rounded text-xs">
-                        Escalated
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-white text-sm">{ticket.title}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-gray-300 text-sm">{ticket.category}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <PriorityBadge priority={ticket.priority} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={ticket.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-gray-300 text-sm">
-                      {ticket.assignedTo || '—'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-gray-400 text-sm">
-                      {new Date(ticket.createdAt).toLocaleDateString()}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => navigate(`/tickets/${ticket.id}`)}
-                      className="text-blue-400 hover:text-blue-300 text-sm transition"
-                    >
-                      View →
-                    </button>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                    Loading tickets...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : tickets.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                    No tickets found
+                  </td>
+                </tr>
+              ) : (
+                tickets.map((ticket) => (
+                  <tr
+                    key={ticket.id}
+                    className="border-b border-gray-700/50 hover:bg-gray-700/30 transition"
+                  >
+                    <td className="px-4 py-3">
+                      <span className="text-blue-400 text-sm font-mono">
+                        {ticket.referenceNumber}
+                      </span>
+                      {ticket.escalationRequested && (
+                        <span className="ml-2 px-1.5 py-0.5 bg-red-500/10 
+                          text-red-400 border border-red-500/20 
+                          rounded text-xs">
+                          Escalated
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-white text-sm">{ticket.title}</span>
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-3">
+                      <span className="text-gray-300 text-sm">{ticket.category}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <PriorityBadge priority={ticket.priority} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={ticket.status} />
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-3">
+                      <span className="text-gray-300 text-sm">
+                        {ticket.assignedTo || '—'}
+                      </span>
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-3">
+                      <span className="text-gray-400 text-sm">
+                        {new Date(ticket.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate(`/tickets/${ticket.id}`)}
+                        className="text-blue-400 hover:text-blue-300 text-sm transition"
+                      >
+                        View →
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ─── Pagination ─────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
           <p className="text-gray-400 text-sm">
             Page {page} of {totalPages}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}

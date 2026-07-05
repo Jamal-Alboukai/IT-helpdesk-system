@@ -69,8 +69,9 @@ export default function AIChatbot() {
     <>
       {/* ─── Chat panel ───────────────────────────────── */}
       {open && (
-        <div className="fixed bottom-20 right-6 z-50
-          w-80 sm:w-96 h-[500px]
+        <div className="fixed inset-x-3 bottom-20 z-50
+          max-w-[calc(100vw-1.5rem)] sm:right-6 sm:left-auto
+          w-full sm:w-80 md:w-96 h-[70vh] max-h-[500px]
           bg-gray-800 border border-gray-700 rounded-2xl
           shadow-2xl flex flex-col overflow-hidden">
 
@@ -117,8 +118,8 @@ export default function AIChatbot() {
                   msg.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm
-                  leading-relaxed
+                <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 py-2 text-sm
+                  leading-relaxed break-words
                   ${msg.role === 'user'
                     ? 'bg-blue-600 text-white rounded-br-sm'
                     : 'bg-gray-700 text-gray-100 rounded-bl-sm'
@@ -155,7 +156,7 @@ export default function AIChatbot() {
 
           {/* Input */}
           <div className="p-3 border-t border-gray-700">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <textarea
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -171,7 +172,7 @@ export default function AIChatbot() {
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || loading}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700
+                className="w-full sm:w-auto px-3 py-2 bg-blue-600 hover:bg-blue-700
                   disabled:opacity-50 text-white rounded-xl
                   transition shrink-0"
               >
@@ -188,7 +189,7 @@ export default function AIChatbot() {
       {/* ─── Floating toggle button ────────────────────── */}
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="fixed bottom-6 right-6 z-50
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50
           w-12 h-12 bg-blue-600 hover:bg-blue-700
           rounded-full shadow-lg transition
           flex items-center justify-center text-xl
