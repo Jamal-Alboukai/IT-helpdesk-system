@@ -165,9 +165,9 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-gray-800
+        <div className="absolute right-0 left-0 sm:left-auto sm:right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-80 max-w-[22rem] bg-gray-800
           border border-gray-700 rounded-xl shadow-xl z-50
-          max-h-96 overflow-hidden flex flex-col">
+          max-h-[80vh] overflow-hidden flex flex-col">
 
           {/* Header */}
           <div className="flex items-center justify-between p-3
@@ -210,7 +210,7 @@ export default function NotificationBell() {
                         bg-blue-500 flex-shrink-0" />
                     )}
                     <div className={!n.isRead ? '' : 'pl-3.5'}>
-                      <p className="text-gray-200 text-sm leading-snug">
+                      <p className="text-gray-200 text-sm leading-snug break-words">
                         {n.message}
                       </p>
                       <p className="text-gray-500 text-xs mt-1">

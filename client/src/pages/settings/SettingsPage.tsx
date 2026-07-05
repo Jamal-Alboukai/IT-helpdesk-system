@@ -141,12 +141,14 @@ function CategoriesTab() {
 
       {/* Feedback */}
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+        <div className="p-3 bg-red-500/10 border border-red-500/20
+          rounded-lg">
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
       {success && (
-        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+        <div className="p-3 bg-green-500/10 border border-green-500/20
+          rounded-lg">
           <p className="text-green-400 text-sm">{success}</p>
         </div>
       )}
@@ -185,7 +187,7 @@ function CategoriesTab() {
               rounded-lg text-white placeholder-gray-400 text-sm
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={handleAdd}
               disabled={!newName.trim() || adding}
@@ -224,8 +226,8 @@ function CategoriesTab() {
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600
-                    rounded-lg text-white text-sm
+                  className="w-full px-3 py-2 bg-gray-700 border
+                    border-gray-600 rounded-lg text-white text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
@@ -233,11 +235,12 @@ function CategoriesTab() {
                   placeholder="Description (optional)"
                   value={editDescription}
                   onChange={e => setEditDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600
-                    rounded-lg text-white placeholder-gray-400 text-sm
+                  className="w-full px-3 py-2 bg-gray-700 border
+                    border-gray-600 rounded-lg text-white
+                    placeholder-gray-400 text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleSaveEdit(cat.id)}
                     disabled={!editName.trim() || saving}
@@ -250,30 +253,35 @@ function CategoriesTab() {
                   <button
                     onClick={cancelEdit}
                     className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500
-                      text-gray-300 text-xs font-medium rounded-lg transition"
+                      text-gray-300 text-xs font-medium rounded-lg
+                      transition"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start
+                sm:justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <p className="text-white text-sm font-medium">
                       {cat.name}
                     </p>
                     <ActiveBadge isActive={cat.isActive} />
                   </div>
                   {cat.description && (
-                    <p className="text-gray-400 text-xs">{cat.description}</p>
+                    <p className="text-gray-400 text-xs">
+                      {cat.description}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => startEdit(cat)}
                     className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500
-                      text-gray-300 text-xs font-medium rounded-lg transition"
+                      text-gray-300 text-xs font-medium rounded-lg
+                      transition"
                   >
                     Edit
                   </button>
@@ -414,12 +422,14 @@ function PrioritiesTab() {
     <div className="space-y-4">
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+        <div className="p-3 bg-red-500/10 border border-red-500/20
+          rounded-lg">
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
       {success && (
-        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+        <div className="p-3 bg-green-500/10 border border-green-500/20
+          rounded-lg">
           <p className="text-green-400 text-sm">{success}</p>
         </div>
       )}
@@ -460,7 +470,7 @@ function PrioritiesTab() {
           <p className="text-gray-500 text-xs">
             Existing orders: {priorities.map(p => p.displayOrder).join(', ')}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={handleAdd}
               disabled={!newName.trim() || !newOrder || adding}
@@ -488,15 +498,16 @@ function PrioritiesTab() {
       <div className="space-y-2">
         {priorities.map(p => (
           <div key={p.id}
-            className="bg-gray-700/30 border border-gray-700 rounded-xl p-4">
+            className="bg-gray-700/30 border border-gray-700
+              rounded-xl p-4">
             {editingId === p.id ? (
               <div className="space-y-3">
                 <input
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600
-                    rounded-lg text-white text-sm
+                  className="w-full px-3 py-2 bg-gray-700 border
+                    border-gray-600 rounded-lg text-white text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
@@ -504,11 +515,11 @@ function PrioritiesTab() {
                   value={editOrder}
                   min={1}
                   onChange={e => setEditOrder(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600
-                    rounded-lg text-white text-sm
+                  className="w-full px-3 py-2 bg-gray-700 border
+                    border-gray-600 rounded-lg text-white text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleSaveEdit(p.id)}
                     disabled={!editName.trim() || !editOrder || saving}
@@ -521,15 +532,17 @@ function PrioritiesTab() {
                   <button
                     onClick={() => setEditingId(null)}
                     className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500
-                      text-gray-300 text-xs font-medium rounded-lg transition"
+                      text-gray-300 text-xs font-medium rounded-lg
+                      transition"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center
+                sm:justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-gray-500 text-xs w-6 text-right">
                     #{p.displayOrder}
                   </span>
@@ -540,7 +553,8 @@ function PrioritiesTab() {
                   <button
                     onClick={() => startEdit(p)}
                     className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500
-                      text-gray-300 text-xs font-medium rounded-lg transition"
+                      text-gray-300 text-xs font-medium rounded-lg
+                      transition"
                   >
                     Edit
                   </button>
@@ -602,7 +616,8 @@ function StatusesTab() {
     <div className="space-y-4">
 
       {/* Info banner */}
-      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+      <div className="p-3 bg-blue-500/10 border border-blue-500/20
+        rounded-lg">
         <p className="text-blue-400 text-sm">
           Statuses are fixed to the ticket workflow and cannot be added or
           removed. The transition rules are enforced by the system.
@@ -628,12 +643,14 @@ function StatusesTab() {
         {statuses.map(s => (
           <div key={s.id}
             className="bg-gray-700/30 border border-gray-700
-              rounded-xl p-4 flex items-center gap-4">
+              rounded-xl p-4 flex flex-wrap items-center gap-3">
             <span className="text-gray-500 text-xs w-6 text-right">
               #{s.displayOrder}
             </span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium
-              border ${colors[s.name] || 'bg-gray-500/10 text-gray-400 border-gray-600'}`}>
+            <span className={`px-2 py-0.5 rounded-full text-xs
+              font-medium border
+              ${colors[s.name] ||
+                'bg-gray-500/10 text-gray-400 border-gray-600'}`}>
               {s.name}
             </span>
             <ActiveBadge isActive={s.isActive} />
@@ -655,12 +672,14 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900 p-4 md:p-6">
       <div className="max-w-3xl mx-auto">
 
         {/* ─── Header ───────────────────────────────────── */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-white">
+            Settings
+          </h1>
           <p className="text-gray-400 text-sm mt-1">
             Manage categories, priorities, and system statuses
           </p>
@@ -672,7 +691,8 @@ export default function SettingsPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition
+              className={`flex-1 py-2 text-sm font-medium rounded-lg
+                transition
                 ${activeTab === tab.key
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
@@ -684,7 +704,7 @@ export default function SettingsPage() {
         </div>
 
         {/* ─── Tab content ──────────────────────────────── */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="bg-gray-800 rounded-xl p-4 md:p-6">
           {activeTab === 'categories' && <CategoriesTab />}
           {activeTab === 'priorities' && <PrioritiesTab />}
           {activeTab === 'statuses' && <StatusesTab />}

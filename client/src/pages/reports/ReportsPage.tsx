@@ -68,7 +68,6 @@ export default function ReportsPage() {
   }
 
   // ─── Export PDF ─────────────────────────────────────────────
-  // Uses browser print — no library needed
   function handleExportPDF() {
     window.print();
   }
@@ -89,8 +88,6 @@ export default function ReportsPage() {
         'Avg Resolution (hrs)': m.avgResolutionHours,
       }));
       const ws1 = XLSX.utils.json_to_sheet(monthlyData);
-
-      // Column widths
       ws1['!cols'] = [
         { wch: 12 }, { wch: 14 }, { wch: 10 },
         { wch: 10 }, { wch: 10 }, { wch: 22 },
@@ -166,13 +163,16 @@ export default function ReportsPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-gray-900 p-6 print-page" ref={printRef}>
+      <div className="min-h-screen bg-gray-900 p-4 md:p-6 print-page"
+        ref={printRef}>
         <div className="max-w-6xl mx-auto">
 
           {/* ─── Header ─────────────────────────────────── */}
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start
+            sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white print-title">
+              <h1 className="text-xl md:text-2xl font-bold text-white
+                print-title">
                 Reports
               </h1>
               <p className="text-gray-400 text-sm mt-1 print-subtitle">
@@ -181,7 +181,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Controls — hidden on print */}
-            <div className="flex items-center gap-3 no-print">
+            <div className="flex flex-wrap items-center gap-2 no-print">
               <select
                 value={months}
                 onChange={e => setMonths(Number(e.target.value))}
@@ -230,7 +230,8 @@ export default function ReportsPage() {
           ) : (
             <>
               {/* ─── KPI summary strip ─────────────────── */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 kpi-grid">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3
+                md:gap-4 mb-6 kpi-grid">
                 {[
                   { label: 'Total Created', value: totals.totalCreated,
                     color: 'text-blue-400' },
@@ -246,7 +247,8 @@ export default function ReportsPage() {
                     <p className="text-gray-400 text-xs mb-1 kpi-label">
                       {kpi.label}
                     </p>
-                    <p className={`text-3xl font-bold kpi-value ${kpi.color}`}>
+                    <p className={`text-2xl md:text-3xl font-bold
+                      kpi-value ${kpi.color}`}>
                       {kpi.value}
                     </p>
                     <p className="text-gray-500 text-xs mt-1">
@@ -258,96 +260,108 @@ export default function ReportsPage() {
 
               {/* ─── Monthly Summary table ─────────────── */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-white mb-3
-                  section-title">
+                <h2 className="text-base md:text-lg font-semibold
+                  text-white mb-3 section-title">
                   Monthly Ticket Summary
                 </h2>
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Month
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Created
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Resolved
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Closed
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Escalated
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Avg Resolution
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {monthly.map((m, i) => (
-                        <tr key={i}
-                          className="border-b border-gray-700/50
-                            hover:bg-gray-700/20 transition">
-                          <td className="px-4 py-3 text-white font-medium">
-                            {m.month}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[560px]">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Month
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Created
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Resolved
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase
+                            hidden sm:table-cell">
+                            Closed
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase
+                            hidden sm:table-cell">
+                            Escalated
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Avg Resolution
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthly.map((m, i) => (
+                          <tr key={i}
+                            className="border-b border-gray-700/50
+                              hover:bg-gray-700/20 transition">
+                            <td className="px-4 py-3 text-white
+                              font-medium whitespace-nowrap">
+                              {m.month}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-blue-400">
+                              {m.totalCreated}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-green-400">
+                              {m.resolved}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-gray-400 hidden sm:table-cell">
+                              {m.closed}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              hidden sm:table-cell">
+                              {m.escalated > 0 ? (
+                                <span className="text-red-400">
+                                  {m.escalated}
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-gray-300 whitespace-nowrap">
+                              {fmt(m.avgResolutionHours)}
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Totals row */}
+                        <tr className="border-t-2 border-gray-600
+                          bg-gray-700/30 font-semibold">
+                          <td className="px-4 py-3 text-gray-300">
+                            Total
                           </td>
                           <td className="px-4 py-3 text-right text-blue-400">
-                            {m.totalCreated}
+                            {totals.totalCreated}
                           </td>
                           <td className="px-4 py-3 text-right text-green-400">
-                            {m.resolved}
+                            {totals.resolved}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-400">
-                            {m.closed}
+                          <td className="px-4 py-3 text-right text-gray-400
+                            hidden sm:table-cell">
+                            {totals.closed}
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            {m.escalated > 0 ? (
-                              <span className="text-red-400">
-                                {m.escalated}
-                              </span>
-                            ) : (
-                              <span className="text-gray-600">0</span>
-                            )}
+                          <td className="px-4 py-3 text-right text-red-400
+                            hidden sm:table-cell">
+                            {totals.escalated}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-300">
-                            {fmt(m.avgResolutionHours)}
+                          <td className="px-4 py-3 text-right text-gray-500">
+                            —
                           </td>
                         </tr>
-                      ))}
-
-                      {/* Totals row */}
-                      <tr className="border-t-2 border-gray-600
-                        bg-gray-700/30 font-semibold">
-                        <td className="px-4 py-3 text-gray-300">
-                          Total
-                        </td>
-                        <td className="px-4 py-3 text-right text-blue-400">
-                          {totals.totalCreated}
-                        </td>
-                        <td className="px-4 py-3 text-right text-green-400">
-                          {totals.resolved}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-400">
-                          {totals.closed}
-                        </td>
-                        <td className="px-4 py-3 text-right text-red-400">
-                          {totals.escalated}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-500">
-                          —
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
 
                   {monthly.every(m => m.totalCreated === 0) && (
                     <p className="text-gray-500 text-sm text-center py-8">
@@ -359,85 +373,100 @@ export default function ReportsPage() {
 
               {/* ─── Agent Performance table ───────────── */}
               <div>
-                <h2 className="text-lg font-semibold text-white mb-3
-                  section-title">
+                <h2 className="text-base md:text-lg font-semibold
+                  text-white mb-3 section-title">
                   Agent Performance
                 </h2>
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Agent
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Assigned
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Resolved
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Closed
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Active
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase">
-                          Avg Resolution
-                        </th>
-                        <th className="px-4 py-3 text-xs
-                          font-medium text-gray-400 uppercase bar-cell">
-                          Resolution Rate
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {agents.map((a, i) => (
-                        <tr key={i}
-                          className="border-b border-gray-700/50
-                            hover:bg-gray-700/20 transition">
-                          <td className="px-4 py-3">
-                            <p className="text-white font-medium">
-                              {a.agentName}
-                            </p>
-                            <p className="text-gray-500 text-xs">
-                              {a.email}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3 text-right text-gray-300">
-                            {a.totalAssigned}
-                          </td>
-                          <td className="px-4 py-3 text-right text-green-400">
-                            {a.resolved}
-                          </td>
-                          <td className="px-4 py-3 text-right text-gray-400">
-                            {a.closed}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            {a.activeTickets > 0 ? (
-                              <span className="text-blue-400">
-                                {a.activeTickets}
-                              </span>
-                            ) : (
-                              <span className="text-gray-600">0</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right text-gray-300">
-                            {fmt(a.avgResolutionHours)}
-                          </td>
-                          <td className="px-4 py-3 w-40 bar-cell">
-                            <ResolutionBar rate={a.resolutionRate} />
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[560px]">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Agent
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Assigned
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase">
+                            Resolved
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase
+                            hidden md:table-cell">
+                            Closed
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase
+                            hidden md:table-cell">
+                            Active
+                          </th>
+                          <th className="text-right px-4 py-3 text-xs
+                            font-medium text-gray-400 uppercase
+                            hidden lg:table-cell">
+                            Avg Resolution
+                          </th>
+                          <th className="px-4 py-3 text-xs font-medium
+                            text-gray-400 uppercase bar-cell
+                            hidden lg:table-cell">
+                            Resolution Rate
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {agents.map((a, i) => (
+                          <tr key={i}
+                            className="border-b border-gray-700/50
+                              hover:bg-gray-700/20 transition">
+                            <td className="px-4 py-3">
+                              <p className="text-white font-medium
+                                whitespace-nowrap">
+                                {a.agentName}
+                              </p>
+                              <p className="text-gray-500 text-xs
+                                hidden sm:block">
+                                {a.email}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-gray-300">
+                              {a.totalAssigned}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-green-400">
+                              {a.resolved}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-gray-400 hidden md:table-cell">
+                              {a.closed}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              hidden md:table-cell">
+                              {a.activeTickets > 0 ? (
+                                <span className="text-blue-400">
+                                  {a.activeTickets}
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right
+                              text-gray-300 hidden lg:table-cell
+                              whitespace-nowrap">
+                              {fmt(a.avgResolutionHours)}
+                            </td>
+                            <td className="px-4 py-3 w-40 bar-cell
+                              hidden lg:table-cell">
+                              <ResolutionBar rate={a.resolutionRate} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
                   {agents.length === 0 && (
                     <p className="text-gray-500 text-sm text-center py-8">
