@@ -142,8 +142,8 @@ export default function TicketListPage() {
           </p>
         </div>
 
-        {/* Only Employee, ITSupportAgent, Admin can create */}
-        {user?.role !== 'Manager' && (
+        {/* Only Employee, Admin can create */}
+        {user?.role !== 'Manager' && user?.role !== 'ITSupportAgent' && (
           <button
             onClick={() => navigate('/tickets/new')}
             className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 
