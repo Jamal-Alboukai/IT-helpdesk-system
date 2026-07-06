@@ -49,10 +49,10 @@ namespace WebApplication1server.Controllers
         }
 
         // ─── CREATE TICKET ────────────────────────────────────
-        // Employee, ITSupportAgent, Admin can create
+        // Employee, Admin can create
         // Manager cannot create tickets
         [HttpPost]
-        [Authorize(Roles = "Employee,ITSupportAgent,Admin")]
+        [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDTO request)
         {
             // Validate required fields
@@ -65,10 +65,17 @@ namespace WebApplication1server.Controllers
             if (request.PriorityId == Guid.Empty)
                 return BadRequest(new { message = "Priority is required" });
 
+        try {
             var result = await _ticketService.CreateTicketAsync(request, User);
             return CreatedAtAction(nameof(GetTicketById),
                 new { id = result.Id }, result);
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
 
         // ─── UPDATE TICKET ────────────────────────────────────
         // Rules enforced inside service per role

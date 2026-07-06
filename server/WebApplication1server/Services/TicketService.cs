@@ -133,6 +133,10 @@ namespace WebApplication1server.Services
         {
             var (userId, role) = _queryHelper.GetUserInfo(userClaims);
 
+        if (role == RoleConstants.ITSupportAgent)
+            throw new UnauthorizedAccessException(
+            "IT Support Agents cannot create tickets.");
+
             var ticket = new Ticket
             {
                 Id = Guid.NewGuid(),
