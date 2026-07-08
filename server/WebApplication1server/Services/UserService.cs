@@ -18,6 +18,10 @@ namespace WebApplication1server.Services
             Guid id, UpdateUserDTO request);
         Task<bool> ToggleActiveAsync(Guid id);
         Task<List<LookupDTO>> GetRolesAsync();
+         // ... existing methods stay exactly the same ...
+    Task<ProfileResponseDTO?> GetProfileAsync(ClaimsPrincipal userClaims);
+    Task<(ProfileResponseDTO? profile, string? error)> UpdateProfileAsync(
+        ClaimsPrincipal userClaims, UpdateProfileDTO request);
     }
 
     public class UserService : IUserService
@@ -227,5 +231,68 @@ namespace WebApplication1server.Services
                 CreatedAt = user.CreatedAt
             };
         }
+        // ─── GET PROFILE — any logged in user ─────────────────
+        public async Task<ProfileResponseDTO?> GetProfileAsync(
+            ClaimsPrincipal userClaims)
+        {
+            var userId = Guid.Parse(
+                userClaims.FindFirst("nameid")!.Value);
+
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null) return null;
+
+            return new ProfileResponseDTO
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                FullName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email,
+                Role = user.Role.Name,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
+        // ─── UPDATE PROFILE — any logged in user ──────────────
+        public async Task<(ProfileResponseDTO? profile, string? error)>
+            UpdateProfileAsync(
+                ClaimsPrincipal userClaims, UpdateProfileDTO request)
+        {
+            var userId = Guid.Parse(
+                userClaims.FindFirst("nameid")!.Value);
+
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return (null, "User not found.");
+
+            if (!string.IsNullOrWhiteSpace(request.FirstName))
+                user.FirstName = request.FirstName.Trim();
+
+            if (!string.IsNullOrWhiteSpace(request.LastName))
+                user.LastName = request.LastName.Trim();
+
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return (new ProfileResponseDTO
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                FullName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email,
+                Role = user.Role.Name,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
+            }, null);
+        }
     }
+    
 }
