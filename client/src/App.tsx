@@ -14,6 +14,7 @@ import UsersPage from './pages/users/UsersPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import ActivityLogPage from './pages/logs/ActivityLogPage';
+import ProfilePage from './pages/profile/ProfilePage';
 
 function App() {
   return (
@@ -103,6 +104,14 @@ function App() {
                 </MainLayout>
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ProfilePage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+          
           
 
 

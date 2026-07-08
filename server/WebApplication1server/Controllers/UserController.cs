@@ -107,5 +107,35 @@ namespace WebApplication1server.Controllers
             var result = await _userService.GetRolesAsync();
             return Ok(result);
         }
+        // ─── GET MY PROFILE — all roles ───────────────────────
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var result = await _userService.GetProfileAsync(User);
+            if (result == null)
+                return NotFound(new { message = "Profile not found." });
+            return Ok(result);
+        }
+
+        // ─── UPDATE MY PROFILE — all roles ────────────────────
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile(
+            [FromBody] UpdateProfileDTO request)
+        {
+            if (string.IsNullOrWhiteSpace(request.FirstName) &&
+                string.IsNullOrWhiteSpace(request.LastName))
+                return BadRequest(new
+                {
+                    message = "At least one field is required."
+                });
+
+            var (profile, error) = await _userService
+                .UpdateProfileAsync(User, request);
+
+            if (error != null)
+                return BadRequest(new { message = error });
+
+            return Ok(profile);
+        }
     }
 }

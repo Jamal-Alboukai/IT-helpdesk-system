@@ -19,6 +19,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       roles: ['Admin', 'Manager'],
     },
     {
+      label: 'Profile',
+      path: '/profile',
+      icon: '👤',
+      roles: ['Admin', 'Manager', 'ITSupportAgent', 'Employee'],
+    },  
+    {
       label: 'Tickets',
       path: '/tickets',
       icon: '🎫',
