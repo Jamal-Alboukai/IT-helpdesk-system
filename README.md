@@ -1,130 +1,140 @@
-# 🎫 IT Help Desk & Ticketing Management System
+# 🎫 IDS IT Help Desk & Ticketing System
 
-> A modern, full-stack web application for managing internal IT support operations — built as part of a Full Stack Web Development Internship at **Integrated Digital Systems**.
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql)
+![License](https://img.shields.io/badge/license-Internal-lightgrey)
 
----
+> Full-stack IT support ticketing system built as an 8-week internship
+> project at **Integrated Digital Systems**.
 
-## 👨‍💻 Intern
-
-**Jamal Alboukai**
-GitHub: [@Jamal-Alboukai](https://github.com/Jamal-Alboukai/Jamal-Alboukai)
-
-**Supervisor:** Suha Mneimneh
-**Company:** Integrated Digital Systems
-
----
-
-## 📌 Project Overview
-
-This system allows company employees to submit IT support tickets, while IT agents and administrators can manage, prioritize, assign, and resolve them through a centralized dashboard.
-
-The project simulates a real-world enterprise software development environment, covering frontend development, backend APIs, database design, authentication, reporting, and AI integrations.
+**Author:** Jamal Alboukai · **Supervisor:** Suha Mneimneh
 
 ---
 
-## 🛠️ Tech Stack
+## 📌 Description
 
-| Layer | Technology |
-|---|---|
-| Frontend | React.js + Tailwind CSS |
-| Backend | ASP.NET Core Web API (C#) |
-| Database | PostgreSQL (Neon Cloud) |
-| Authentication | JWT + ASP.NET Identity |
-| Deployment | Azure / Docker |
-| AI Integration | OpenAI API |
+A role-based IT Help Desk platform where employees submit support tickets,
+agents resolve them, managers monitor performance, and admins control the
+whole system — with AI-assisted triage, real-time notifications, and full
+audit logging.
 
----
+## ✅ Features
 
-## 👥 System Roles
+- JWT authentication with 4 roles (Employee, IT Support Agent, Manager, Admin)
+- Full ticket lifecycle with enforced status workflow
+- Real-time notifications (SignalR)
+- AI ticket categorization/priority suggestion + chatbot (Groq)
+- Dashboard analytics, monthly reports, Excel/PDF export
+- Global activity log / audit trail
+- Fully responsive UI (mobile, tablet, desktop)
 
-| Role | Description |
-|---|---|
-| Admin | Full system access |
-| IT Support Agent | Manage and resolve tickets |
-| Employee | Create and track tickets |
-| Manager | Monitor team tickets and reports |
+## 📷 Screenshots
 
----
+*(placeholders — to be added)*
 
-## 📦 Core Modules
+`![Dashboard](./docs/screenshots/dashboard.png)`
+`![Ticket Detail](./docs/screenshots/ticket-detail.png)`
 
-- **Authentication & User Management** — Admin-created accounts, JWT auth, forced password change on first login
-- **Ticket Management** — Create, update, track tickets with categories, priorities, and statuses
-- **Ticket Assignment & Workflow** — Assign, reassign, escalate tickets with full audit trail
-- **Communication & Notifications** — In-app notifications, comment system, internal notes
-- **Dashboard & Reporting** — Analytics, charts, PDF/Excel export
-- **Admin Panel** — User management, role management, system settings
-- **AI Features** *(Advanced)* — Auto categorization, priority suggestion, reply suggestions
+## 🏗️ Architecture
 
----
+React SPA → ASP.NET Core Web API → PostgreSQL (Neon), plus SendGrid (email)
+and Groq (AI, called directly from the frontend). Full diagrams in
+[`/docs/architecture.md`](./docs/architecture.md).
 
-## 🗄️ Database Schema
+## 🚀 Installation
 
-The system uses a relational PostgreSQL database with 10 tables:
+```bash
+# Backend
+cd server/WebApplication1server
+cp appsettings.example.json appsettings.json   # fill in secrets
+dotnet restore && dotnet ef database update && dotnet run
 
-`User` · `Role` · `Ticket` · `TicketComment` · `TicketAttachment` · `Notification` · `ActivityLog` · `Category` · `Priority` · `Status`
-
-📎See full ERD diagram in [`/docs/ERD.png`](./docs/ERD.png)
-
----
-
-## 📁 Project Structure
-
-```
-it-helpdesk-system/
-├── client/         → React.js frontend
-├── server/         → ASP.NET Core Web API backend
-├── docs/           → ERD diagrams, wireframes, documentation
-└── README.md
+# Frontend
+cd client
+cp .env.example .env                            # add REACT_APP_GROQ_API_KEY
+npm install && npm start
 ```
 
+## ⚙️ Configuration
+
+See [`/docs/deployment.md`](./docs/deployment.md) for all required
+environment variables and setup details.
+
+## ▶️ Running
+
+- Backend: `http://localhost:5197`
+- Frontend: `http://localhost:3000`
+
+## 📁 Folder Structure
+
+See [`/docs/project-structure.md`](./docs/project-structure.md) for the
+full annotated tree.
+
+## 📡 API Summary
+
+See [`/docs/api.md`](./docs/api.md) for the complete endpoint reference.
+
+## 🗄️ Database
+
+See [`/docs/database.md`](./docs/database.md) for the ER diagram, table
+descriptions, and migration history.
+
+## 🔒 Security
+
+See [`/docs/security.md`](./docs/security.md) for authentication,
+authorization, and known security gaps.
+
+## 🧪 Testing
+
+See [`/docs/testing.md`](./docs/testing.md) — no automated test suite
+currently exists; manual role-based regression testing is the current
+strategy.
+
+## 🤝 Contributing
+
+See [`/docs/maintenance.md`](./docs/maintenance.md) — branch workflow is
+`dev → main` via pull request.
+
+## ❓ FAQ
+
+**Q: Why Groq instead of OpenAI or Gemini for AI features?**
+A: Free-tier availability. Gemini's free tier was blocked in the deployment
+region; Groq (Llama 3.3 70B) has no such restriction and remains free.
+
+**Q: Can IT Support Agents create tickets?**
+A: No — only Employees and Admins can create tickets. Agents manage,
+resolve, and escalate tickets that are assigned to them.
+
+**Q: Is there an automated test suite?**
+A: Not yet. See [`/docs/testing.md`](./docs/testing.md) for the current
+manual testing strategy and the plan for adding automated coverage.
+
+**Q: Is this containerized / deployable via Docker?**
+A: Not yet — see [`/docs/deployment.md`](./docs/deployment.md) for the
+current manual setup process and a suggested starting `Dockerfile`.
+
+## 📄 License
+
+Internal project — Integrated Digital Systems. Not licensed for external
+use or distribution.
+
 ---
 
-## 🗓️ 8-Week Timeline
+## 📚 Full Documentation Index
 
-| Week | Focus |
+| Document | Contents |
 |---|---|
-| 1 | Planning, wireframes, ERD, database schema |
-| 2 | Project setup, authentication, role management |
-| 3 | Ticket CRUD, categories & priorities |
-| 4 | Assignment workflow, comments, statuses |
-| 5 | Notifications, file uploads, dashboard |
-| 6 | Reports, charts, export, AI integration |
-| 7 | Testing, bug fixing, UI improvements |
-| 8 | Deployment, documentation, final demo |
-
----
-
-## 🚀 Getting Started
-
-> Setup instructions will be added in Week 2 once the project structure is initialized.
-
----
-
-## 📄 Documentation
-
-- [ ] ERD Diagram
-- [ ] System Workflow Diagrams
-- [ ] UI Wireframes
-- [ ] API Documentation
-- [ ] Setup Instructions
-- [ ] Final Demo Video
-
----
-
-## 📝 Weekly Progress
-
-| Week | Status | Deliverable |
-|---|---|---|
-| Week 1 | 🔄 done | Wireframes, ERD, Schema, Repo setup |
-| Week 2 | 🔄 done| Auth system |
-| Week 3 | 🔄 done | Ticket module |
-| Week 4 | 🔄 done | Workflow |
-| Week 5 | 🔄 done | Dashboard |
-| Week 6 | 🔄 done | Reports & AI |
-| Week 7 | ⏳ InProgrees | Testing |
-| Week 8 | ⏳ Pending | Deployment |
-
----
-
-*Internship Project — Integrated Digital Systems · 2025*
+| [`docs/overview.md`](./docs/overview.md) | Executive summary, purpose, features, glossary |
+| [`docs/architecture.md`](./docs/architecture.md) | System architecture, diagrams, design decisions |
+| [`docs/project-structure.md`](./docs/project-structure.md) | Full folder-by-folder breakdown |
+| [`docs/backend.md`](./docs/backend.md) | Controllers, services, auth, middleware |
+| [`docs/frontend.md`](./docs/frontend.md) | Pages, components, state, routing |
+| [`docs/database.md`](./docs/database.md) | ERD, tables, relationships, migrations |
+| [`docs/api.md`](./docs/api.md) | Full endpoint reference |
+| [`docs/deployment.md`](./docs/deployment.md) | Setup, environment variables, Docker (planned) |
+| [`docs/security.md`](./docs/security.md) | Auth, known risks, recommendations |
+| [`docs/performance.md`](./docs/performance.md) | Caching, bottlenecks, scaling notes |
+| [`docs/testing.md`](./docs/testing.md) | Current testing strategy and gaps |
+| [`docs/maintenance.md`](./docs/maintenance.md) | Troubleshooting, known issues, onboarding |
